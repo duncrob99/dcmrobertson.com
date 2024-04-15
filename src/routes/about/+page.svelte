@@ -4,23 +4,40 @@
 </svelte:head>
 
 <div class="text-column">
-	<h1>About this app</h1>
+	<img src="/portrait.jpg" alt="Duncan Robertson" class="portrait" />
+
+	<h1>About Me</h1>
 
 	<p>
-		This is a <a href="https://kit.svelte.dev">SvelteKit</a> app. You can make your own by typing the
-		following into your command line and following the prompts:
-	</p>
-
-	<pre>npm create svelte@latest</pre>
-
-	<p>
-		The page you're looking at is purely static HTML, with no client-side interactivity needed.
-		Because of that, we don't need to load any JavaScript. Try viewing the page's source, or opening
-		the devtools network panel and reloading.
+	I'm Duncan Robertson, a fifth-year aerospace engineering student and experienced tutor who is passionate about helping students reach their full potential in subjects that I personally love.
 	</p>
 
 	<p>
-		The <a href="/sverdle">Sverdle</a> page illustrates SvelteKit's data loading and form handling. Try
-		using it with JavaScript disabled!
+	My teaching philosophy is centered around empowering students to think for themselves and approach their studies with confidence. I believe that by guiding my students to find their own solutions, they'll take ownership of their learning and develop a stronger understanding of the material.
+	</p>
+
+	<p>
+	I tutor mainly in maths (including VCE General and Specialist), physics, general science, and German – all subjects that I have a personal passion for. I have extensive experience in these areas and can adapt to meet each student's individual needs, providing a personalized learning experience.
+	</p>
+
+	<p>
+	What I enjoy most about tutoring is the satisfaction of watching my students improve and become more comfortable with their studies. After working with me, my goal for each student is to have the confidence and understanding to approach their studies with independence and to think for themselves.
+	</p>
+
+	<p>
+	If you're looking for a tutor who is dedicated to your success and passionate about the subjects they teach, look no further. Let me help you reach your full potential!
 	</p>
 </div>
+
+<style lang="scss">
+	.portrait {
+		border-radius: 50%;
+		max-width: 10rem;
+	}
+
+	.text-column {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+</style>

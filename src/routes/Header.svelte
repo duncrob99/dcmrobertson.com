@@ -1,129 +1,163 @@
-<script>
+<script lang="ts">
 	import { page } from '$app/stores';
-	import logo from '$lib/images/svelte-logo.svg';
-	import github from '$lib/images/github.svg';
+	import logo from '$lib/images/int_dr.svg';
+	import type { User } from '$lib/server/auth_utils';
+	import { stretchy_crossfade } from '$lib/transitions/transitions';
+	import { tick, onMount } from 'svelte';
+	import { cubicIn, cubicInOut, cubicOut, quintOut } from 'svelte/easing';
+	import { crossfade } from 'svelte/transition';
+
+	export let pages = [
+		[
+			{ name: 'Home', url: '/' },
+			{ name: 'About', url: '/about' },
+			{ name: 'Availability', url: '/availability' }
+		],
+        //[
+		//	{ name: 'Login', url: '/login' },
+		//	{ name: 'Register', url: '/register' }
+		//]
+	];
+
+	export let user: User | undefined;
+
+    let account_links = user ? [
+        { name: `Hello, ${user.email.split('@')[0]}`, url: '/account' },
+        { name: 'Logout', url: '/logout' }
+    ] : [
+        { name: 'Login', url: '/login' },
+        { name: 'Register', url: '/register' }
+    ];
+
+    let links = [...pages, account_links];
+
+    const [send, receive] = crossfade({
+        duration: d => Math.sqrt(d * 1000),
+
+        fallback(node, params) {
+            const style = getComputedStyle(node);
+            const transform = style.transform === 'none' ? '' : style.transform;
+
+            return {
+                duration: 900,
+                easing: cubicInOut,
+                css: t => `
+                    transform: ${transform} scale(${t});
+                    opacity: ${t}
+                `
+            };
+        }
+    });
+
+	let overflow = false;
+	let collapsed = false;
+
+	function checkOverflow() {
+		overflow = false;
+		tick().then(() => {
+			const nav = document.querySelector('nav');
+			if (!nav) return;
+			overflow = nav.scrollWidth > nav.clientWidth;
+			console.log(overflow);
+		});
+	}
+
+	onMount(() => {
+		checkOverflow();
+		window.addEventListener('resize', checkOverflow);
+	});
 </script>
 
-<header>
-	<div class="corner">
-		<a href="https://kit.svelte.dev">
-			<img src={logo} alt="SvelteKit" />
-		</a>
-	</div>
-
+<header class:overflow class:collapsed>
 	<nav>
-		<svg viewBox="0 0 2 3" aria-hidden="true">
-			<path d="M0,0 L1,2 C1.5,3 1.5,3 2,3 L2,0 Z" />
-		</svg>
-		<ul>
-			<li aria-current={$page.url.pathname === '/' ? 'page' : undefined}>
-				<a href="/">Home</a>
-			</li>
-			<li aria-current={$page.url.pathname === '/about' ? 'page' : undefined}>
-				<a href="/about">About</a>
-			</li>
-			<li aria-current={$page.url.pathname.startsWith('/sverdle') ? 'page' : undefined}>
-				<a href="/sverdle">Sverdle</a>
-			</li>
-		</ul>
-		<svg viewBox="0 0 2 3" aria-hidden="true">
-			<path d="M0,0 L0,3 C0.5,3 0.5,3 1,2 L2,0 Z" />
-		</svg>
+		<a href="/"><img src={logo} alt="logo" /></a>
+		{#each links as pageGroup}
+			<ul>
+				{#each pageGroup as page_link (page_link.url)}
+					<li aria-current={$page.url.pathname === page_link.url ? 'page' : undefined}>
+						<a href={page_link.url}>{page_link.name}</a>
+						{#if $page.url.pathname === page_link.url}
+							<div in:receive="{{key: 0}}" out:send="{{key: 0}}" class="underline"></div>
+						{/if}
+					</li>
+				{/each}
+			</ul>
+		{/each}
 	</nav>
-
-	<div class="corner">
-		<a href="https://github.com/sveltejs/kit">
-			<img src={github} alt="GitHub" />
-		</a>
-	</div>
 </header>
 
-<style>
+<style lang="scss">
+	@import 'global';
+
 	header {
-		display: flex;
-		justify-content: space-between;
-	}
+		$background: rgba(255, 255, 255, 0.7);
+		$nav-height: 4rem;
 
-	.corner {
-		width: 3em;
-		height: 3em;
-	}
+		&:not(.overflow) {
+			display: grid;
+			grid-template-columns: 1fr $content-width 1fr;
+			grid-template-areas: '. content .';
+			background: $background;
 
-	.corner a {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 100%;
-		height: 100%;
-	}
+			nav {
+				width: min(100vw, $content-width);
+				grid-area: content;
+				display: flex;
+				justify-content: space-between;
+				gap: 4rem;
+				position: relative;
+			}
 
-	.corner img {
-		width: 2em;
-		height: 2em;
-		object-fit: contain;
-	}
+			ul {
+				position: relative;
+				padding: 0;
+				margin: 0;
+				height: $nav-height;
+				display: flex;
+				justify-content: start;
+				align-items: center;
+				list-style: none;
 
-	nav {
-		display: flex;
-		justify-content: center;
-		--background: rgba(255, 255, 255, 0.7);
-	}
+				li {
+					position: relative;
+					height: 100%;
 
-	svg {
-		width: 2em;
-		height: 3em;
-		display: block;
-	}
+					.underline {
+						content: '';
+						width: 100%;
+						height: 5px;
+						position: absolute;
+						bottom: 0;
+						left: 0;
+						background: var(--color-theme-1);
+						border-radius: 5px;
+						border-top-right-radius: 5px;
+					}
+				}
+			}
 
-	path {
-		fill: var(--background);
-	}
+			nav a {
+				display: flex;
+				height: 100%;
+				align-items: center;
+				padding: 0 0.5rem;
+				color: var(--color-text);
+				font-weight: 700;
+				font-size: 0.8rem;
+				text-transform: uppercase;
+				letter-spacing: 0.1em;
+				text-decoration: none;
+				transition: color 0.2s linear;
+			}
+		}
 
-	ul {
-		position: relative;
-		padding: 0;
-		margin: 0;
-		height: 3em;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		list-style: none;
-		background: var(--background);
-		background-size: contain;
-	}
+		a:hover {
+			color: var(--color-theme-1);
+		}
 
-	li {
-		position: relative;
-		height: 100%;
-	}
-
-	li[aria-current='page']::before {
-		--size: 6px;
-		content: '';
-		width: 0;
-		height: 0;
-		position: absolute;
-		top: 0;
-		left: calc(50% - var(--size));
-		border: var(--size) solid transparent;
-		border-top: var(--size) solid var(--color-theme-1);
-	}
-
-	nav a {
-		display: flex;
-		height: 100%;
-		align-items: center;
-		padding: 0 0.5rem;
-		color: var(--color-text);
-		font-weight: 700;
-		font-size: 0.8rem;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		text-decoration: none;
-		transition: color 0.2s linear;
-	}
-
-	a:hover {
-		color: var(--color-theme-1);
+		img {
+			height: $nav-height * 0.7;
+			padding-right: 2rem;
+		}
 	}
 </style>
