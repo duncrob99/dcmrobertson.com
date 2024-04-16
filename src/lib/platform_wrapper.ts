@@ -26,10 +26,10 @@ class DummyEnv {
 
 	constructor() {
 		this.BOOKABLE_TIMES = new DummyKVStore();
-		this.BOOKABLE_TIMES.put(JSON.stringify(new TimeRange(Day.Monday, new Time(10, 0), new Time(11, 0))), '');
+		this.BOOKABLE_TIMES.put(JSON.stringify(new TimeRange(Day.Monday, new Time(13, 0), new Time(14, 0))), '');
 		this.BOOKABLE_TIMES.put(JSON.stringify(new TimeRange(Day.Thursday, new Time(13, 0), new Time(17, 15))), '');
 
-        console.log(`DummyEnv constructor this.BOOKABLE_TIMES: ${this.BOOKABLE_TIMES}`);
+        console.log(`DummyEnv constructor this.BOOKABLE_TIMES: ${JSON.stringify(this.BOOKABLE_TIMES)}`);
 
 		this.ACCOUNTS = new DummyKVStore();
 		this.ACCOUNTS.put('admin@admin.com', '{"publicKey": "something", "wrappedPrivateKey": "something else"}');
