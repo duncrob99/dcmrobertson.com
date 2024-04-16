@@ -15,8 +15,20 @@ class DummyKVStore {
 		delete this.data[key];
 	}
 
-	async list(prefix?: string): Promise<string[]> {
-		return Object.keys(this.data).filter(key => key.startsWith(prefix ?? ''));
+	async list(prefix?: string): Promise<KVListType> {
+		return {
+            keys: Object.keys(this.data)
+                        .filter(key => key.startsWith(prefix ?? ''))
+                        .map(key => {
+                            return {
+                                name: key,
+                                expiration: 5,
+                                metadata: {}
+                            }
+                        }),
+            list_complete: true,
+            cursor: ""
+        }
 	}
 }
 
@@ -26,7 +38,7 @@ class DummyEnv {
 
 	constructor() {
 		this.BOOKABLE_TIMES = new DummyKVStore();
-		this.BOOKABLE_TIMES.put(JSON.stringify(new TimeRange(Day.Monday, new Time(10, 0), new Time(11, 0))), '');
+		this.BOOKABLE_TIMES.put(JSON.stringify(new TimeRange(Day.Monday, new Time(13, 0), new Time(14, 0))), '');
 		this.BOOKABLE_TIMES.put(JSON.stringify(new TimeRange(Day.Thursday, new Time(13, 0), new Time(17, 15))), '');
 
 		this.ACCOUNTS = new DummyKVStore();
@@ -46,3 +58,13 @@ export class PlatformWrapper {
 		this.platform = platform ?? new DummyPlatform();
 	}
 }
+
+export type KVListType = {
+  keys: {
+    name: string;
+    expiration: number;
+    metadata: Record<string, string>;
+  }[];
+  list_complete: boolean;
+  cursor: string;
+};
