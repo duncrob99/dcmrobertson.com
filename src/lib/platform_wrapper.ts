@@ -15,8 +15,20 @@ class DummyKVStore {
 		delete this.data[key];
 	}
 
-	async list(prefix?: string): Promise<string[]> {
-		return Object.keys(this.data).filter(key => key.startsWith(prefix ?? ''));
+	async list(prefix?: string): Promise<KVListType> {
+		return {
+            keys: Object.keys(this.data)
+                        .filter(key => key.startsWith(prefix ?? ''))
+                        .map(key => {
+                            return {
+                                name: key,
+                                expiration: 5,
+                                metadata: {}
+                            }
+                        }),
+            list_complete: true,
+            cursor: ""
+        }
 	}
 }
 
@@ -48,3 +60,13 @@ export class PlatformWrapper {
 		this.platform = platform ?? new DummyPlatform();
 	}
 }
+
+export type KVListType = {
+  keys: {
+    name: string;
+    expiration: number;
+    metadata: Record<string, string>;
+  }[];
+  list_complete: boolean;
+  cursor: string;
+};
