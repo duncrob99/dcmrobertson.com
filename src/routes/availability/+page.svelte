@@ -3,16 +3,7 @@
 	import { AppointmentState, type Appointment } from '$lib/types';
 	import Calendar from '$lib/components/Calendar.svelte';
 	import type { PageData } from './$types';
-
-    type KVListType = {
-      keys: {
-        name: string;
-        expiration: number;
-        metadata: Record<string, string>;
-      }[];
-      list_complete: boolean;
-      cursor: string;
-    };
+    import type { KVListType } from '$lib/platform_wrapper';
 
 	export let data: PageData;
 
