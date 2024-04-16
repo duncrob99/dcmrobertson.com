@@ -226,6 +226,10 @@
                 height: calc(var(--whole-height) / var(--duration) * 4 - var(--margin));
             }
 
+            &:first-child:last-child {
+                height: calc(var(--whole-height) / var(--duration) * 4 - 2*var(--margin));
+            }
+
             &:first-child {
                 top: 0;
                 border-top-left-radius: 0.2em;
