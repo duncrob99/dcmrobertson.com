@@ -7,7 +7,7 @@ export const load = (async ({params, platform}) => {
     console.log(`availability +page.server.ts platform_wrapper.env: ${JSON.stringify(platform_wrapper.env)}`);
     console.log(`availability +page.server.ts platform_wrapper.env?.BOOKABLE_TIMES: ${JSON.stringify(platform_wrapper.env?.BOOKABLE_TIMES)}`);
     console.log(`availability +page.server.ts platform_wrapper.env?.BOOKABLE_TIMES.list(): ${JSON.stringify(platform_wrapper.env?.BOOKABLE_TIMES.list())}`);
-	const appointments: Array<string> = (platform_wrapper.env?.BOOKABLE_TIMES.list());
+	const appointments: Array<string> = (platform?.env?.BOOKABLE_TIMES.list());
 
 	return {
 		appointments: appointments
