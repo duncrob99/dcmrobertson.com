@@ -16,12 +16,6 @@
 
 	export let data: PageData;
 
-    console.log(`availability/+page.svelte data: ${data}`);
-    console.log(`availability/+page.svelte data.appointments: ${data.appointments}`);
-
-    console.log(`availability/+page.svelte data: ${JSON.stringify(data)}`);
-    console.log(`availability/+page.svelte data.appointments: ${JSON.stringify(data.appointments)}`);
-
     const appointments_data: KVListType = data.appointments;
 	let appointments = appointments_data.keys.map(val => {
         const time = val.name;
