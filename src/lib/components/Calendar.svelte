@@ -5,7 +5,7 @@
     import { tick, onMount } from 'svelte';
 
     export let appointments: Appointment[];
-    export let startHour = 12;
+    export let startHour = 0;
     export let endHour = 24;
     let shortenDays = true;
     let days: HTMLDivElement;
