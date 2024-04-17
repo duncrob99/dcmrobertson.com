@@ -83,6 +83,10 @@ export class TimeRange {
 			}
 		};
 	}
+
+    toString() {
+        return `${this.day} ${this.start.toString()} - ${this.end.toString()}`;
+    }
 }
 
 export enum AppointmentState {

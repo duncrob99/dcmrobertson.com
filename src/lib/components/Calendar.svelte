@@ -79,7 +79,7 @@
                     >
                         {#each Array.from({ length: getVisibleDuration(appointment.time_range) - 3 }, (_, i) => i) as offset}
                             <a
-                                href={`/book?day=${appointment.time_range.day}&start=${Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset}&end=${
+                                href={`/contact?day=${appointment.time_range.day}&start=${Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset}&end=${
                                     Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset + 4
                                 }`}
                                 style="--offset: {offset}"
