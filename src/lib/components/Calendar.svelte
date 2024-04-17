@@ -168,7 +168,6 @@
     }
 
     .appointment {
-        z-index: 10;
         outline: 1px solid black;
         --margin: 0.2em;
         margin: var(--margin) calc(2 * var(--margin));
@@ -264,6 +263,7 @@
                     border-radius: 0.5em;
                     border-top-left-radius: 0;
                     padding: 0.2em 0.5em;
+                    z-index: 1;
                 }
             }
         }
