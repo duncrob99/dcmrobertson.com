@@ -7,6 +7,11 @@
     $: subject = data.timerange === undefined ? "" : "Tutoring session request for " + data.timerange.day + "s";
 </script>
 
+<div class="preamble">
+    <p>Please feel free to reach out to me using this form with any questions or to schedule a tutoring session. I will get back to you as soon as possible.</p>
+    <p>Alternatively, you can email me at <a href="mailto:tutoring@dcmrobertson.com">tutoring@dcmrobertson.com</a>.</p>
+</div>
+
 <form action="https://api.staticforms.xyz/submit" method="post">
     <!-- Replace with accesKey sent to your email -->
     <input type="hidden" name="accessKey" value="1a3ebf0f-4660-4319-b33a-1e3116d04f47"> <!-- Required -->

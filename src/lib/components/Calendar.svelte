@@ -179,8 +179,8 @@
         background: var(--inactive-background);
 
         &.bookable {
-            --inactive-background: #00ff00;
-            --hover-background: #00cc00;
+            --inactive-background: #4BB1FF;
+            --hover-background: rgba(0, 0, 0, 0.3);
         }
 
         &.booked {

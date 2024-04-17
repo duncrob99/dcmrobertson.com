@@ -17,4 +17,5 @@
 	});
 </script>
 
+<p>You can see my availability here and choose a suitable time for you. Please note that these times aren't guaranteed to be accurate, so please reach out to me to confirm availability.</p>
 <Calendar appointments={appointments} />
