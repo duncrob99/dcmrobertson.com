@@ -79,7 +79,7 @@
                     >
                         {#each Array.from({ length: getVisibleDuration(appointment.time_range) - 3 }, (_, i) => i) as offset}
                             <a
-                                href={`/book?day=${appointment.time_range.day}&start=${Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset}&end=${
+                                href={`/contact?day=${appointment.time_range.day}&start=${Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset}&end=${
                                     Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset + 4
                                 }`}
                                 style="--offset: {offset}"
@@ -179,8 +179,8 @@
         background: var(--inactive-background);
 
         &.bookable {
-            --inactive-background: #00ff00;
-            --hover-background: #00cc00;
+            --inactive-background: #4BB1FF;
+            --hover-background: rgba(0, 0, 0, 0.3);
         }
 
         &.booked {
@@ -224,6 +224,10 @@
 
             &:first-child, &:last-child {
                 height: calc(var(--whole-height) / var(--duration) * 4 - var(--margin));
+            }
+
+            &:first-child:last-child {
+                height: calc(var(--whole-height) / var(--duration) * 4 - 2*var(--margin));
             }
 
             &:first-child {

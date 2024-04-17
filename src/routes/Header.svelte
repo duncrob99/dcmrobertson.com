@@ -11,7 +11,8 @@
 		[
 			{ name: 'Home', url: '/' },
 			{ name: 'About', url: '/about' },
-			{ name: 'Availability', url: '/availability' }
+			{ name: 'Availability', url: '/availability' },
+            { name: 'Contact', url: '/contact' },
 		],
         //[
 		//	{ name: 'Login', url: '/login' },
@@ -29,7 +30,8 @@
         { name: 'Register', url: '/register' }
     ];
 
-    let links = [...pages, account_links];
+    //let links = [...pages, account_links];
+    let links = [...pages, []];
 
     const [send, receive] = crossfade({
         duration: d => Math.sqrt(d * 1000),

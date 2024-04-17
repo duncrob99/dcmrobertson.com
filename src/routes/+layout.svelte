@@ -10,7 +10,9 @@
     <Header bind:user/>
 
 	<main>
+        <div class="container">
 		<slot />
+        </div>
 	</main>
 
 	<footer>
