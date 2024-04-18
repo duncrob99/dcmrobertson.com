@@ -66,6 +66,13 @@
 	onMount(() => {
 		checkOverflow();
 		window.addEventListener('resize', checkOverflow);
+
+        window.addEventListener('click', (e) => {
+            if (collapsed) return;
+            if (e.target !== document.querySelector('nav .hamburger')) {
+                collapsed = true;
+            }
+        });
 	});
 </script>
 
@@ -119,7 +126,7 @@
 
             ul {
                 grid-column: 1 / 3;
-                transition: transform 0.2s ease-in-out;
+                transition: transform 0.3s ease-in-out;
                 margin: 0;
                 margin-left: -1em;
 
