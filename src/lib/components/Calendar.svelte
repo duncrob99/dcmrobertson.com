@@ -206,7 +206,8 @@
             pointer-events: none;
             padding: 0.5em;
             position: absolute;
-            white-space: nowrap;
+            top: 0;
+            bottom: 0;
             overflow: hidden;
             width: calc(100% - 1.5em);
         }
