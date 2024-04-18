@@ -134,10 +134,22 @@
                 transition: transform 0.3s ease-in-out;
                 margin: 0;
                 margin-left: -1em;
+                list-style: none;
+                padding-left: 1em;
 
                 &:first-of-type {
                     padding-top: 100%;
                     margin-top: -100%;
+                }
+
+                li {
+                    margin-block: 1rem;
+
+                    &[aria-current='page'] {
+                        a {
+                            color: var(--color-theme-1);
+                        }
+                    }
                 }
             }
 
