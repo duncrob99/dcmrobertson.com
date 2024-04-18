@@ -153,6 +153,10 @@
             border-bottom-right-radius: $corner-radius;
             padding: 0;
             opacity: 1 !important;
+
+            * {
+                pointer-events: none;
+            }
         }
 
         nav a {
