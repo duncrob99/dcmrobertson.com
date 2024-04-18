@@ -52,7 +52,7 @@
     });
 
 	let overflow = false;
-	let collapsed = false;
+	let collapsed = true;
 
 	function checkOverflow() {
 		overflow = false;
@@ -60,19 +60,32 @@
 			const nav = document.querySelector('nav');
 			if (!nav) return;
 			overflow = nav.scrollWidth > nav.clientWidth;
-			console.log(overflow);
 		});
 	}
 
 	onMount(() => {
 		checkOverflow();
 		window.addEventListener('resize', checkOverflow);
+
+        window.addEventListener('click', (e) => {
+            if (collapsed) return;
+            if (e.target !== document.querySelector('nav .hamburger')) {
+                collapsed = true;
+            }
+        });
 	});
 </script>
 
 <header class:overflow class:collapsed>
 	<nav>
-		<a href="/"><img src={logo} alt="logo" /></a>
+        <a class="logo" href="/"><img src={logo} alt="logo"/></a>
+        {#if overflow}
+            <button class="hamburger hamburger--collapse" class:is-active={!collapsed} type="button" on:click={() => collapsed = !collapsed}>
+                <span class="hamburger-box">
+                    <span class="hamburger-inner"></span>
+                </span>
+            </button>
+        {/if}
 		{#each links as pageGroup}
 			<ul>
 				{#each pageGroup as page_link (page_link.url)}
@@ -90,17 +103,107 @@
 
 <style lang="scss">
 	@import 'global';
+    @import 'hamburgers/_sass/hamburgers/hamburgers';
+
+    :global(.app) {
+        margin-top: $navbar-height;
+    }
 
 	header {
-		$background: rgba(255, 255, 255, 0.7);
-		$nav-height: 4rem;
+		$background: rgba(255, 255, 255, 1);
+        $corner-radius: 20px;
+
+        background: $background;
+        display: grid;
+        grid-template-columns: 1fr min($content-width, 100%) 1fr;
+        grid-template-areas: '. content .';
+        padding: 0 1rem;
+        height: $navbar-height;
+        z-index: 10;
+        position: fixed;
+        top: 0;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+
+        nav {
+            grid-area: content;
+            display: grid;
+            grid-template-columns: 1fr min-content;
+
+            ul {
+                grid-column: 1 / 3;
+                transition: transform 0.3s ease-in-out;
+                margin: 0;
+                margin-left: -1em;
+                list-style: none;
+                padding-left: 1em;
+
+                &:first-of-type {
+                    padding-top: 100%;
+                    margin-top: -100%;
+                }
+
+                li {
+                    margin-block: 1rem;
+
+                    &[aria-current='page'] {
+                        a {
+                            color: var(--color-theme-1);
+                        }
+                    }
+                }
+            }
+
+            > * {
+                background: $background;
+            }
+        }
+
+        .hamburger {
+            height: $navbar-height;
+            aspect-ratio: 1;
+            z-index: 1;
+            border-bottom-right-radius: $corner-radius;
+            padding: 0;
+            opacity: 1 !important;
+
+            * {
+                pointer-events: none;
+            }
+        }
+
+        nav a {
+            display: flex;
+            align-items: center;
+            padding: 0 0.5rem;
+            color: var(--color-text);
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            text-decoration: none;
+            transition: color 0.2s linear;
+
+            &.logo {
+                height: $navbar-height;
+                z-index: 1;
+            }
+        }
+
+        &.collapsed.overflow ul {
+            transform: translateY(-100%);
+            pointer-events: none;
+        }
+
+        &.overflow {
+            padding-right: 0;
+            border-bottom-right-radius: $corner-radius;
+
+            ul {
+                border-bottom-right-radius: $corner-radius;
+            }
+        }
 
 		&:not(.overflow) {
-			display: grid;
-			grid-template-columns: 1fr $content-width 1fr;
-			grid-template-areas: '. content .';
-			background: $background;
-
 			nav {
 				width: min(100vw, $content-width);
 				grid-area: content;
@@ -114,7 +217,7 @@
 				position: relative;
 				padding: 0;
 				margin: 0;
-				height: $nav-height;
+				height: $navbar-height;
 				display: flex;
 				justify-content: start;
 				align-items: center;
@@ -138,19 +241,9 @@
 				}
 			}
 
-			nav a {
-				display: flex;
-				height: 100%;
-				align-items: center;
-				padding: 0 0.5rem;
-				color: var(--color-text);
-				font-weight: 700;
-				font-size: 0.8rem;
-				text-transform: uppercase;
-				letter-spacing: 0.1em;
-				text-decoration: none;
-				transition: color 0.2s linear;
-			}
+            nav a {
+                height: 100%;
+            }
 		}
 
 		a:hover {
@@ -158,7 +251,7 @@
 		}
 
 		img {
-			height: $nav-height * 0.7;
+			height: $navbar-height * 0.7;
 			padding-right: 2rem;
 		}
 	}

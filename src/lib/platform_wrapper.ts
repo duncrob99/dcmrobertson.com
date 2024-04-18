@@ -40,6 +40,7 @@ class DummyEnv {
 		this.BOOKABLE_TIMES = new DummyKVStore();
 		this.BOOKABLE_TIMES.put(JSON.stringify(new TimeRange(Day.Monday, new Time(13, 0), new Time(14, 0))), '');
 		this.BOOKABLE_TIMES.put(JSON.stringify(new TimeRange(Day.Thursday, new Time(13, 0), new Time(17, 15))), '');
+		this.BOOKABLE_TIMES.put(JSON.stringify(new TimeRange(Day.Friday, new Time(13, 0), new Time(17, 15))), '');
 
 		this.ACCOUNTS = new DummyKVStore();
 		this.ACCOUNTS.put('admin@admin.com', '{"publicKey": "something", "wrappedPrivateKey": "something else"}');

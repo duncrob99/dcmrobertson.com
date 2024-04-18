@@ -5,11 +5,14 @@
     import { tick, onMount } from 'svelte';
 
     export let appointments: Appointment[];
-    export let startHour = 12;
+    export let startHour = 0;
     export let endHour = 24;
     let shortenDays = true;
     let days: HTMLDivElement;
-    let scrollContainer: HTMLDivElement;
+
+    let showTimes = true;
+    let testingTimeWidth = false;
+    let appointmentsEl: HTMLDivElement;
 
     async function checkDayOverflow() {
         if (!days) return;
@@ -23,6 +26,26 @@
         }
     }
 
+    async function checkTimeOverflow() {
+        if (!appointmentsEl) return;
+        showTimes = true;
+        testingTimeWidth = true;
+        await tick();
+        for (const appointment of appointmentsEl.children) {
+            const timeStyle = window.getComputedStyle(appointment, ':after');
+            const timeWidth = parseFloat(timeStyle.width);
+            console.log(timeWidth, appointment.clientWidth);
+            console.log(timeWidth > appointment.clientWidth);
+            if (timeWidth > appointment.clientWidth) {
+                console.log('hiding times due to ', appointment);
+                console.log(timeWidth, appointment.clientWidth);
+                showTimes = false;
+                break;
+            }
+        }
+        testingTimeWidth = false;
+    }
+
     function getVisibleDuration(time: TimeRange): number {
         const start = Math.max(time.start.asQuarterHours(), startHour * 4);
         const end = Math.min(time.end.asQuarterHours(), endHour * 4);
@@ -31,82 +54,78 @@
 
     onMount(() => {
         checkDayOverflow();
+        checkTimeOverflow();
         window.addEventListener('resize', checkDayOverflow);
+        window.addEventListener('resize', checkTimeOverflow);
     });
 </script>
 
-<div bind:this={scrollContainer} class="scroll-container">
-    <div class="calendar-container" style="--num-rows: {endHour - startHour}">
-        <div bind:this={days} class="days">
-            {#if shortenDays}
-                <div>Sun</div>
-                <div>Mon</div>
-                <div>Tue</div>
-                <div>Wed</div>
-                <div>Thu</div>
-                <div>Fri</div>
-                <div>Sat</div>
-            {:else}
-                <div>Sunday</div>
-                <div>Monday</div>
-                <div>Tuesday</div>
-                <div>Wednesday</div>
-                <div>Thursday</div>
-                <div>Friday</div>
-                <div>Saturday</div>
-            {/if}
-        </div>
-        <div class="times">
-            {#each Array.from({ length: endHour - startHour }, (_, i) => i + startHour) as hour}
-                <div>{hour.toString().padStart(2, '0')}:00</div>
-            {/each}
-        </div>
-        <div class="appointments">
-            {#each appointments as appointment}
-                {#if getVisibleDuration(appointment.time_range) >= 4}
-                    <div
-                        class="appointment"
-                        class:bookable={appointment.state === AppointmentState.Available}
-                        class:booked={appointment.state === AppointmentState.Booked}
-                        style="grid-row: {Math.max(appointment.time_range.start.asQuarterHours() + 1 - startHour * 4, 1)}
-                            / {Math.min(appointment.time_range.end.asQuarterHours() + 1 - startHour * 4, 4 * (endHour - startHour) + 1)};
-                            grid-column: {appointment.time_range.day + 1} / {appointment.time_range.day + 2};
-                            --duration: {getVisibleDuration(appointment.time_range)};"
-                        data-start-hour={appointment.time_range.start.hour}
-                        data-start-minute={appointment.time_range.start.minute.toString().padStart(2, '0')}
-                        data-end-hour={appointment.time_range.end.hour}
-                        data-end-minute={appointment.time_range.end.minute.toString().padStart(2, '0')}
-                    >
-                        {#each Array.from({ length: getVisibleDuration(appointment.time_range) - 3 }, (_, i) => i) as offset}
-                            <a
-                                href={`/contact?day=${appointment.time_range.day}&start=${Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset}&end=${
-                                    Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset + 4
-                                }`}
-                                style="--offset: {offset}"
-                                aria-label="Inquire about {Time.fromQuarterHours(Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset)} - {Time.fromQuarterHours(Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset + 4)}"/>
-                        {/each}
-                    </div>
-                {/if}
-            {/each}
-        </div>
-        <div class="gridlines">
-            {#each Array.from({ length: endHour - startHour }, (_, i) => i) as _}
-                {#each Array.from({ length: 7 }, (_, i) => i) as _}
-                    <div />
-                {/each}
-            {/each}
-        </div>
+<div class="calendar-container" style="--num-rows: {endHour - startHour}">
+    <div bind:this={days} class="days">
+        {#if shortenDays}
+            <div>Sun</div>
+            <div>Mon</div>
+            <div>Tue</div>
+            <div>Wed</div>
+            <div>Thu</div>
+            <div>Fri</div>
+            <div>Sat</div>
+        {:else}
+            <div>Sunday</div>
+            <div>Monday</div>
+            <div>Tuesday</div>
+            <div>Wednesday</div>
+            <div>Thursday</div>
+            <div>Friday</div>
+            <div>Saturday</div>
+        {/if}
     </div>
-</div>
+    <div class="times">
+        {#each Array.from({ length: endHour - startHour }, (_, i) => i + startHour) as hour}
+            <div>{hour.toString().padStart(2, '0')}:00</div>
+        {/each}
+    </div>
+    <div class="appointments" bind:this={appointmentsEl}>
+        {#each appointments as appointment}
+            {#if getVisibleDuration(appointment.time_range) >= 4}
+                <div
+                    class="appointment"
+                    class:bookable={appointment.state === AppointmentState.Available}
+                    class:booked={appointment.state === AppointmentState.Booked}
+                    class:show-times={showTimes}
+                    class:testing-time-width={testingTimeWidth}
+                    style="grid-row: {Math.max(appointment.time_range.start.asQuarterHours() + 1 - startHour * 4, 1)}
+                    / {Math.min(appointment.time_range.end.asQuarterHours() + 1 - startHour * 4, 4 * (endHour - startHour) + 1)};
+                    grid-column: {appointment.time_range.day + 1} / {appointment.time_range.day + 2};
+                    --duration: {getVisibleDuration(appointment.time_range)};"
+                    data-start-hour={appointment.time_range.start.hour}
+                    data-start-minute={appointment.time_range.start.minute.toString().padStart(2, '0')}
+                    data-end-hour={appointment.time_range.end.hour}
+                    data-end-minute={appointment.time_range.end.minute.toString().padStart(2, '0')}
+                    >
+                    {#each Array.from({ length: getVisibleDuration(appointment.time_range) - 3 }, (_, i) => i) as offset}
+                        <a
+                            href={`/contact?day=${appointment.time_range.day}&start=${Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset}&end=${
+                            Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset + 4
+                            }`}
+                            style="--offset: {offset}"
+                            aria-label="Inquire about {Time.fromQuarterHours(Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset)} - {Time.fromQuarterHours(Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset + 4)}"/>
+                    {/each}
+                </div>
+            {/if}
+        {/each}
+    </div>
+    <div class="gridlines">
+        {#each Array.from({ length: endHour - startHour }, (_, i) => i) as _}
+            {#each Array.from({ length: 7 }, (_, i) => i) as _}
+                <div />
+            {/each}
+        {/each}
+                </div>
+    </div>
 
 <style lang="scss">
     @import 'global';
-
-    .scroll-container {
-        overflow: auto;
-        height: calc(100dvh - $navbar-height - 2 * $content-margin);
-        padding: 1px;
-    }
 
     .calendar-container {
         display: grid;
@@ -168,7 +187,6 @@
     }
 
     .appointment {
-        z-index: 10;
         outline: 1px solid black;
         --margin: 0.2em;
         margin: var(--margin) calc(2 * var(--margin));
@@ -201,15 +219,22 @@
             }
         }
 
-        &::after {
+        &.show-times::after {
             content: attr(data-start-hour) ':' attr(data-start-minute) ' - ' attr(data-end-hour) ':'
                 attr(data-end-minute);
             pointer-events: none;
             padding: 0.5em;
             position: absolute;
-            white-space: nowrap;
+            top: 0;
+            bottom: 0;
             overflow: hidden;
             width: calc(100% - 1.5em);
+            min-width: min-content;
+            box-sizing: border-box;
+        }
+
+        &.testing-time-width::after {
+            width: min-content;
         }
 
         a {
@@ -264,6 +289,7 @@
                     border-radius: 0.5em;
                     border-top-left-radius: 0;
                     padding: 0.2em 0.5em;
+                    z-index: 1;
                 }
             }
         }
