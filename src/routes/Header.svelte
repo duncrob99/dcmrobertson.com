@@ -80,7 +80,10 @@
 	<nav>
         <a class="logo" href="/"><img src={logo} alt="logo"/></a>
         {#if overflow}
-            <button class="hamburger" on:click={() => collapsed = !collapsed}>
+            <button class="hamburger hamburger--collapse" class:is-active={!collapsed} type="button" on:click={() => collapsed = !collapsed}>
+                <span class="hamburger-box">
+                    <span class="hamburger-inner"></span>
+                </span>
             </button>
         {/if}
 		{#each links as pageGroup}
@@ -100,6 +103,8 @@
 
 <style lang="scss">
 	@import 'global';
+    @import 'hamburgers/_sass/hamburgers/hamburgers';
+
     :global(.app) {
         margin-top: $navbar-height;
     }
@@ -142,11 +147,12 @@
         }
 
         .hamburger {
-            width: 30px;
-            height: 100%;
-            background: red;
+            height: $navbar-height;
+            aspect-ratio: 1;
             z-index: 1;
             border-bottom-right-radius: $corner-radius;
+            padding: 0;
+            opacity: 1 !important;
         }
 
         nav a {
