@@ -1,6 +1,6 @@
 <script>
 	import Header from './Header.svelte';
-	import './styles.css';
+	import './styles.scss';
 
     export let data;
     let { user } = data;
@@ -25,7 +25,7 @@
 	.app {
 		display: flex;
 		flex-direction: column;
-		min-height: 100dvh;
+		min-height: calc(100dvh - $navbar-height);
 	}
 
 	main {
