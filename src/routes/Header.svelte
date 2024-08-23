@@ -123,6 +123,7 @@
         position: fixed;
         top: 0;
         box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        width: 100%;
 
         nav {
             grid-area: content;
