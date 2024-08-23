@@ -50,6 +50,8 @@
     <input type="hidden" name="replyTo" value="@"> <!-- Optional -->
     <!-- If you want form to redirect to a specific url after submission -->
     <input type="hidden" name="redirectTo" value="/contact/success"> <!-- Optional -->
+    <!-- If we receive data in this field submission will be ignored -->
+    <input type="text" name="honeypot" style="display: none;"> <!-- Optional -->
     <input type="submit" value="Submit" />
 </form>
 
