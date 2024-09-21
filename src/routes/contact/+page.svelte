@@ -1,10 +1,27 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+    import { enhance } from '$app/forms';
+    import { onMount } from 'svelte';
 
 	export let data: PageData;
-    console.log('data: ', data);
+    export let form;
 
     $: subject = data.timerange === undefined ? "" : "Tutoring session request for " + data.timerange.day + "s";
+
+    let formElement: HTMLFormElement;
+
+    onMount(() => {
+        const requiredFields = formElement.querySelectorAll('[data-required]');
+        requiredFields.forEach(field => {
+            field.addEventListener('input', event => {
+                if (field.value === "") {
+                    field.classList.add('invalid');
+                } else {
+                    field.classList.remove('invalid');
+                }
+            });
+        });
+    });
 </script>
 
 <div class="preamble">
@@ -12,12 +29,18 @@
     <p>Alternatively, you can email me at <a href="mailto:tutoring@dcmrobertson.com">tutoring@dcmrobertson.com</a>.</p>
 </div>
 
-<form action="https://api.staticforms.xyz/submit" method="post">
+{#if form?.error_description}
+    <div class="error">
+        <p>{form.error_description}</p>
+    </div>
+{/if}
+
+<form method="post" use:enhance bind:this={formElement}>
     <!-- Replace with accesKey sent to your email -->
     <input type="hidden" name="accessKey" value="1a3ebf0f-4660-4319-b33a-1e3116d04f47"> <!-- Required -->
     <div class="field">
         <label for="name">Name</label>
-        <input type="text" name="name"> <!-- Optional -->
+        <input type="text" name="name" data-required> <!-- Optional -->
     </div>
     <div class="field">
         <label for="subject">Subject</label>
@@ -34,7 +57,7 @@
     {/if}
     <div class="field">
         <label for="email">Email Address</label>
-        <input type="text" name="email"> <!-- Optional -->
+        <input type="email" name="email" data-required> <!-- Optional -->
     </div>
     <div class="field">
         <label for="phone">Phone Number</label>
@@ -42,7 +65,7 @@
     </div>
     <div class="field">
         <label for="message">Message</label>
-        <textarea name="message"></textarea> <!-- Optional -->
+        <textarea name="message" data-required></textarea> <!-- Optional -->
     </div>
     <!-- If you want replyTo to be set to specific email -->
     <!--<input type="text" name="replyTo" value="myreplytoemail@example.com"> <!-- Optional -->
@@ -71,6 +94,7 @@
             width: 100%;
             margin-bottom: 1rem;
             overflow: hidden;
+            --hover-underline-color: #007bff;
 
             > * {
                 display: block;
@@ -103,7 +127,7 @@
             &:not(.no-underline)::after {
                 width: 0;
                 height: 100%;
-                border: 1px solid #007bff;
+                border: 1px solid var(--hover-underline-color);
                 content: "";
                 display: block;
                 transition: width 1s ease-in-out;
@@ -121,6 +145,25 @@
             &:focus-within {
                 &::after {
                     width: calc(100% + 10px);
+                }
+            }
+
+            &:has(input[data-required], textarea[data-required]) {
+                &:has(.invalid) {
+                    --hover-underline-color: darkred;
+
+                    input {
+                        border-bottom-color: red;
+                    }
+                }
+
+                label {
+                    font-weight: bold;
+
+                    &::after {
+                        content: " *";
+                        color: red;
+                    }
                 }
             }
         }
@@ -145,5 +188,16 @@
         text-decoration: none;
         border-radius: 0.25rem;
         margin-left: 1rem;
+    }
+
+    div.error {
+        background-color: rgba(255, 0, 0, 0.1);
+        padding: 1rem;
+        border-radius: 0.25rem;
+        width: max-content;
+
+        p {
+            margin: 0;
+        }
     }
 </style>
