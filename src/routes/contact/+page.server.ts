@@ -1,5 +1,4 @@
 import { render } from 'svelte-email';
-import nodemailer from 'nodemailer';
 import ContactSubmission from '$lib/emails/ContactSubmission.svelte';
 import { fail } from '@sveltejs/kit';
 import { MAIL_SMTP_USER, MAIL_SMTP_PASS, EMAIL_HOST, FROM_EMAIL, CONTACT_SUBMISSION_EMAIL } from '$env/static/private';
@@ -8,9 +7,8 @@ import { MAIL_SMTP_USER, MAIL_SMTP_PASS, EMAIL_HOST, FROM_EMAIL, CONTACT_SUBMISS
 const required_fields = ['name', 'email', 'message'];
 
 export const actions = {
-    default: async ({ request, env }) => {
-        console.log(env);
-
+    default: async ({ request }) => {
+        /*
         const transporter = nodemailer.createTransport({
             host: EMAIL_HOST,
             port: 465,
@@ -20,9 +18,15 @@ export const actions = {
                 pass: MAIL_SMTP_PASS
             }
         });
+        */
 
         const data = await request.formData();
-        const missing = required_fields.filter(field => !data.has(field) || !data.get(field).trim());
+        const missing = required_fields.filter(field => {
+            if (data.has(field)) return false;
+            const value = data.get(field);
+            if (!(value instanceof String || typeof value === 'string')) return
+            return !value.trim();
+        });
         if (missing.length) {
             return fail(422,
                         {
@@ -31,7 +35,7 @@ export const actions = {
                         });
         }
 
-        const emailHtml = await render({
+        const emailHtml = render({
             template: ContactSubmission,
             props: Object.fromEntries(data)
         });
@@ -44,6 +48,8 @@ export const actions = {
             html: emailHtml
         };
 
-        await transporter.sendMail(options);
+        console.log(emailHtml);
+
+        /*await transporter.sendMail(options);*/
     }
 }
