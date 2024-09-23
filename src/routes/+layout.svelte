@@ -23,21 +23,24 @@
 	@import 'global';
 
 	.app {
-		display: flex;
 		flex-direction: column;
-		min-height: calc(100dvh - $navbar-height);
+		min-height: calc(100dvh);
 	}
 
 	main {
 		display: grid;
-		padding: 1rem;
 		width: 100%;
-		margin: 0 auto;
+		margin: 0 0;
 		box-sizing: border-box;
 		grid-template-columns: 1fr min($content-width, 100%) 1fr;
 		grid-template-areas: '. content .';
-		flex-grow: 1;
-		overflow: hidden;
+        min-height: 100dvh;
+        $padding: 2rem;
+        padding: $padding;
+        padding-top: $navbar-height + $padding;
+        top: 0;
+        position: relative;
+        overflow: hidden;
 	}
 
 	main > :global(*) {
