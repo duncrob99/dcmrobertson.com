@@ -6,6 +6,7 @@
 	import { tick, onMount } from 'svelte';
 	import { cubicIn, cubicInOut, cubicOut, quintOut } from 'svelte/easing';
 	import { crossfade } from 'svelte/transition';
+    import '/src/styles/hamburgers/_sass/hamburgers/hamburgers.scss';
 
 	export let pages = [
 		[
@@ -103,7 +104,6 @@
 
 <style lang="scss">
 	@import 'global';
-    @import 'hamburgers/_sass/hamburgers/hamburgers';
 
     :global(.app) {
         margin-top: $navbar-height;
@@ -112,6 +112,7 @@
 	header {
 		$background: rgba(255, 255, 255, 1);
         $corner-radius: 20px;
+        --max-width: 90%;
 
         background: $background;
         display: grid;
@@ -123,7 +124,7 @@
         position: fixed;
         top: 0;
         box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-        width: 100%;
+        width: calc(var(--max-width) - 2rem);
 
         nav {
             grid-area: content;
@@ -205,8 +206,9 @@
         }
 
 		&:not(.overflow) {
+            --max-width: 100%;
+
 			nav {
-				width: min(100vw, $content-width);
 				grid-area: content;
 				display: flex;
 				justify-content: space-between;
