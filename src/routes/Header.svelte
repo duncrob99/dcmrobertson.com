@@ -23,6 +23,7 @@
 
 	export let user: User | undefined;
 
+
     let account_links = user ? [
         { name: `Hello, ${user.email.split('@')[0]}`, url: '/account' },
         { name: 'Logout', url: '/logout' }
@@ -33,6 +34,12 @@
 
     //let links = [...pages, account_links];
     let links = [...pages, []];
+
+    $: currentPage = links.flat().find(page_link => {
+        const withoutTrailingSlash = page_link.url.replace(/\/$/, '');
+        const pageWithoutTrailingSlash = $page.url.pathname.replace(/\/$/, '');
+        return withoutTrailingSlash === pageWithoutTrailingSlash;
+    })?.url;
 
     const [send, receive] = crossfade({
         duration: d => Math.sqrt(d * 1000),
@@ -90,9 +97,9 @@
 		{#each links as pageGroup}
 			<ul>
 				{#each pageGroup as page_link (page_link.url)}
-					<li aria-current={$page.url.pathname === page_link.url ? 'page' : undefined}>
+                    <li aria-current={currentPage === page_link.url ? 'page' : undefined}>
 						<a href={page_link.url}>{page_link.name}</a>
-						{#if $page.url.pathname === page_link.url}
+                        {#if currentPage === page_link.url}
 							<div in:receive="{{key: 0}}" out:send="{{key: 0}}" class="underline"></div>
 						{/if}
 					</li>
@@ -104,10 +111,6 @@
 
 <style lang="scss">
 	@import 'global';
-
-    :global(.app) {
-        margin-top: $navbar-height;
-    }
 
 	header {
 		$background: rgba(255, 255, 255, 1);

@@ -13,7 +13,9 @@
     onMount(() => {
         const requiredFields = formElement.querySelectorAll('[data-required]');
         requiredFields.forEach(field => {
-            field.addEventListener('input', event => {
+            if (!(field instanceof HTMLInputElement) && !(field instanceof HTMLTextAreaElement)) return;
+
+            field.addEventListener('input', () => {
                 if (field.value === "") {
                     field.classList.add('invalid');
                 } else {

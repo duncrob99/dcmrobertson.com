@@ -9,9 +9,7 @@
 </script>
 
 <Html lang="en">
-    <Preview>
-        Contact Form Submission from {name}
-    </Preview>
+    <Preview preview={`Contact Form Submission from ${name}`} />
     <Head>
         <title>Contact Form Submission</title>
     </Head>
