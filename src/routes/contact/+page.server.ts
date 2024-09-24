@@ -2,13 +2,12 @@ import { render } from 'svelte-email';
 import ContactSubmission from '$lib/emails/ContactSubmission.svelte';
 import { fail } from '@sveltejs/kit';
 import { MAIL_SMTP_USER, MAIL_SMTP_PASS, EMAIL_HOST, FROM_EMAIL, CONTACT_SUBMISSION_EMAIL } from '$env/static/private';
-
+import nodemailer from 'nodemailer';
 
 const required_fields = ['name', 'email', 'message'];
 
 export const actions = {
     default: async ({ request }) => {
-        /*
         const transporter = nodemailer.createTransport({
             host: EMAIL_HOST,
             port: 465,
@@ -18,7 +17,6 @@ export const actions = {
                 pass: MAIL_SMTP_PASS
             }
         });
-        */
 
         const data = await request.formData();
         const missing = required_fields.filter(field => {
@@ -44,12 +42,10 @@ export const actions = {
             from: FROM_EMAIL,
             to: CONTACT_SUBMISSION_EMAIL,
             subject: `New contact submission from ${data.get('name')}`,
-            replyTo: data.get('email'),
+            replyTo: `${data.get('email')}`,
             html: emailHtml
         };
 
-        console.log(emailHtml);
-
-        /*await transporter.sendMail(options);*/
+        await transporter.sendMail(options);
     }
 }
