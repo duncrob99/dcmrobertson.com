@@ -3,6 +3,7 @@
 
 	export let name = '[name]';
     export let subject = '[subject]';
+    export let timerange;
     export let email = '[email]';
     export let phone = '[phone]';
     export let message = '[message]';
@@ -24,6 +25,11 @@
         <Text>
             Subject: {subject}
         </Text>
+        {#if timerange !== undefined}
+            <Text>
+                Time: {timerange}
+            </Text>
+        {/if}
         <Text>
             Email: {email}
         </Text>
@@ -33,5 +39,8 @@
         <Text>
             Message: {message}
         </Text>
+        <Button href={`mailto:${email}`} target="_blank">
+            Reply to {name}
+        </Button>
     </Section>
 </Html>

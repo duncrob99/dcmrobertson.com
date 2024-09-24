@@ -8,6 +8,16 @@
 
     $: subject = data.timerange === undefined ? "" : "Tutoring session request for " + data.timerange.day + "s";
 
+    $: {
+        form?.errors?.forEach(field => {
+            const element = formElement.querySelector(`[name="${field}"]`);
+            if (element && element.value === "") {
+                element.classList.add('invalid');
+            }
+        });
+        console.log("form: ", form);
+    }
+
     let formElement: HTMLFormElement;
 
     onMount(() => {
@@ -37,12 +47,16 @@
     </div>
 {/if}
 
+{#if form?.success}
+    <div class="success">
+        <p>Thank you for your message. I will get back to you as soon as possible.</p>
+    </div>
+{/if}
+
 <form method="post" use:enhance bind:this={formElement}>
-    <!-- Replace with accesKey sent to your email -->
-    <input type="hidden" name="accessKey" value="1a3ebf0f-4660-4319-b33a-1e3116d04f47"> <!-- Required -->
     <div class="field">
         <label for="name">Name</label>
-        <input type="text" name="name" data-required> <!-- Optional -->
+        <input type="text" name="name" data-required value={form?.data?.name || ''}> <!-- Optional -->
     </div>
     <div class="field">
         <label for="subject">Subject</label>
@@ -50,33 +64,25 @@
     </div>
     {#if data.timerange !== undefined}
         <div class="field no-underline">
-            <label for="$timerange">Time</label>
+            <label for="timerange">Time</label>
             <div class="field-row">
-                <input name="$timerange" value={data.timerange.toString()} readonly>
+                <input name="timerange" value={data.timerange.toString()} readonly>
                 <a class="btn" href="/availability">Choose another time</a>
             </div>
         </div>
     {/if}
     <div class="field">
         <label for="email">Email Address</label>
-        <input type="email" name="email" data-required> <!-- Optional -->
+        <input type="email" name="email" data-required value={form?.data?.email || ''}> <!-- Optional -->
     </div>
     <div class="field">
         <label for="phone">Phone Number</label>
-        <input type="text" name="phone"> <!-- Optional -->
+        <input type="text" name="phone" value={form?.data?.phone || ''}> <!-- Optional -->
     </div>
     <div class="field">
         <label for="message">Message</label>
-        <textarea name="message" data-required></textarea> <!-- Optional -->
+        <textarea name="message" data-required value={form?.data?.message || ''}></textarea> <!-- Optional -->
     </div>
-    <!-- If you want replyTo to be set to specific email -->
-    <!--<input type="text" name="replyTo" value="myreplytoemail@example.com"> <!-- Optional -->
-    <!-- Specify @ as reply to value if you want it to be customers email -->
-    <input type="hidden" name="replyTo" value="@"> <!-- Optional -->
-    <!-- If you want form to redirect to a specific url after submission -->
-    <input type="hidden" name="redirectTo" value="/contact/success"> <!-- Optional -->
-    <!-- If we receive data in this field submission will be ignored -->
-    <input type="text" name="honeypot" style="display: none;"> <!-- Optional -->
     <input type="submit" value="Submit" />
 </form>
 
@@ -154,7 +160,7 @@
                 &:has(.invalid) {
                     --hover-underline-color: darkred;
 
-                    input {
+                    input, textarea {
                         border-bottom-color: red;
                     }
                 }
@@ -194,6 +200,17 @@
 
     div.error {
         background-color: rgba(255, 0, 0, 0.1);
+        padding: 1rem;
+        border-radius: 0.25rem;
+        width: max-content;
+
+        p {
+            margin: 0;
+        }
+    }
+
+    div.success {
+        background-color: rgba(0, 255, 0, 0.1);
         padding: 1rem;
         border-radius: 0.25rem;
         width: max-content;
