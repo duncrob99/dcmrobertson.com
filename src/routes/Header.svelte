@@ -6,7 +6,7 @@
 	import { tick, onMount } from 'svelte';
 	import { cubicIn, cubicInOut, cubicOut, quintOut } from 'svelte/easing';
 	import { crossfade } from 'svelte/transition';
-    import '/src/styles/hamburgers/_sass/hamburgers/hamburgers.scss';
+    import '/src/styles/hamburgers/hamburgers.scss';
 
 	export let pages = [
 		[
