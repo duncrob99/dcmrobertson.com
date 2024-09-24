@@ -1,35 +1,37 @@
 import { render } from 'svelte-email';
 import ContactSubmission from '$lib/emails/ContactSubmission.svelte';
 import { fail } from '@sveltejs/kit';
-import { MAIL_SMTP_USER, MAIL_SMTP_PASS, EMAIL_HOST, FROM_EMAIL, CONTACT_SUBMISSION_EMAIL } from '$env/static/private';
-import nodemailer from 'nodemailer';
+import { FROM_EMAIL, CONTACT_SUBMISSION_EMAIL, RESEND_API_KEY } from '$env/static/private';
+import { Resend } from 'resend';
+
+const resend = new Resend(RESEND_API_KEY);
 
 const required_fields = ['name', 'email', 'message'];
 
 export const actions = {
     default: async ({ request }) => {
-        const transporter = nodemailer.createTransport({
-            host: EMAIL_HOST,
-            port: 465,
-            secure: true,
-            auth: {
-                user: MAIL_SMTP_USER,
-                pass: MAIL_SMTP_PASS
+
+        const data = await request.formData().then(formData => {
+            const data = new Map();
+            for (const [key, value] of formData.entries()) {
+                data.set(key, value);
             }
+            return data;
         });
 
-        const data = await request.formData();
         const missing = required_fields.filter(field => {
-            if (data.has(field)) return false;
+            if (!data.has(field)) return true;
             const value = data.get(field);
-            if (!(value instanceof String || typeof value === 'string')) return
+            if (!(value instanceof String || typeof value === 'string')) return true;
             return !value.trim();
         });
+        
         if (missing.length) {
             return fail(422,
                         {
                             error_description: `Missing required fields: ${missing.join(', ')}`,
                             errors: missing,
+                            data: Object.fromEntries(data)
                         });
         }
 
@@ -38,14 +40,14 @@ export const actions = {
             props: Object.fromEntries(data)
         });
 
-        const options = {
+        resend.emails.send({
             from: FROM_EMAIL,
             to: CONTACT_SUBMISSION_EMAIL,
             subject: `New contact submission from ${data.get('name')}`,
             replyTo: `${data.get('email')}`,
             html: emailHtml
-        };
+        });
 
-        await transporter.sendMail(options);
+        return { success: true };
     }
 }

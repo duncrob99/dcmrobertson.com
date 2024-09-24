@@ -49,6 +49,7 @@
 		"mathjax-full": "^3.2.2",
 		"mathjax-svelte": "^0.0.2",
 		"nodemailer": "^6.9.15",
+		"resend": "^4.0.0",
 		"svelte-email": "^0.0.4"
 	}
 }
