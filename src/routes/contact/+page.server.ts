@@ -40,7 +40,7 @@ export const actions = {
             props: Object.fromEntries(data)
         });
 
-        resend.emails.send({
+        const resend_email_id = await resend.emails.send({
             from: FROM_EMAIL,
             to: CONTACT_SUBMISSION_EMAIL,
             subject: `New contact submission from ${data.get('name')}`,
@@ -48,6 +48,6 @@ export const actions = {
             html: emailHtml
         });
 
-        return { success: true };
+        return { success: true, resend_email_id };
     }
 }
