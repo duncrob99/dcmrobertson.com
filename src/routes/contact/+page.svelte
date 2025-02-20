@@ -36,6 +36,11 @@
     });
 </script>
 
+<svelte:head>
+	<title>Contact</title>
+	<meta name="description" content="Contact me to organise a tutoring session or to ask any other questions." />
+</svelte:head>
+
 <div class="preamble">
     <p>Please feel free to reach out to me using this form with any questions or to schedule a tutoring session. I will get back to you as soon as possible.</p>
     <p>Alternatively, you can email me at <a href="mailto:tutoring@dcmrobertson.com">tutoring@dcmrobertson.com</a>.</p>
