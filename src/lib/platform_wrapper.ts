@@ -1,4 +1,4 @@
-import { TimeRange, Day, Time } from "./types";
+import { TimeRange, Day, Time, AppointmentState } from "./types";
 
 class DummyKVStore {
 	data: Record<string, string> = {};
@@ -38,9 +38,43 @@ class DummyEnv {
 
 	constructor() {
 		this.BOOKABLE_TIMES = new DummyKVStore();
-		this.BOOKABLE_TIMES.put(JSON.stringify(new TimeRange(Day.Monday, new Time(13, 0), new Time(14, 0))), '');
-		this.BOOKABLE_TIMES.put(JSON.stringify(new TimeRange(Day.Thursday, new Time(13, 0), new Time(17, 15))), '');
-		this.BOOKABLE_TIMES.put(JSON.stringify(new TimeRange(Day.Friday, new Time(13, 0), new Time(17, 15))), '');
+		let example_times = [
+			{
+				time_range: new TimeRange(Day.Thursday, new Time(13, 30), new Time(15, 0)),
+				state: AppointmentState.Booked
+			},
+			{
+				time_range: new TimeRange(Day.Wednesday, new Time(15, 0), new Time(16, 30)),
+				state: AppointmentState.Booked
+			},
+			{
+				time_range: new TimeRange(Day.Friday, new Time(13, 0), new Time(17, 15)),
+				state: AppointmentState.Available
+			},
+			{
+				time_range: new TimeRange(Day.Wednesday, new Time(13, 0), new Time(17, 45)),
+				state: AppointmentState.Available
+			},
+			{
+				time_range: new TimeRange(Day.Thursday, new Time(13, 0), new Time(17, 30)),
+				state: AppointmentState.Available
+			},
+			{
+				time_range: new TimeRange(Day.Friday, new Time(13, 0), new Time(14, 0)),
+				state: AppointmentState.Booked
+			},
+			{
+				time_range: new TimeRange(Day.Monday, new Time(13, 0), new Time(14, 0)),
+				state: AppointmentState.Available
+			},
+		];
+
+		for (let time of example_times) {
+			this.BOOKABLE_TIMES.put(JSON.stringify(time), '');
+		}
+		//this.BOOKABLE_TIMES.put(JSON.stringify(new TimeRange(Day.Monday, new Time(13, 0), new Time(14, 0))), '');
+		//this.BOOKABLE_TIMES.put(JSON.stringify(new TimeRange(Day.Thursday, new Time(13, 0), new Time(17, 15))), '');
+		//this.BOOKABLE_TIMES.put(JSON.stringify(new TimeRange(Day.Friday, new Time(13, 0), new Time(17, 15))), '');
 
 		this.ACCOUNTS = new DummyKVStore();
 		this.ACCOUNTS.put('admin@admin.com', '{"publicKey": "something", "wrappedPrivateKey": "something else"}');

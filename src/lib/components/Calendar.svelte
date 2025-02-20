@@ -1,8 +1,9 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import { type TimeRange, type Appointment, AppointmentState } from '$lib/types';
+    import { TimeRange, type Appointment, AppointmentState } from '$lib/types';
     import { Time } from '$lib/types';
     import { tick, onMount } from 'svelte';
+	import CalendarOld from './CalendarOld.svelte';
 
     export let appointments: Appointment[];
     export let startHour = 0;
@@ -13,6 +14,7 @@
     let showTimes = true;
     let testingTimeWidth = false;
     let appointmentsEl: HTMLDivElement;
+    export let calendarEl: HTMLDivElement;
 
     async function checkDayOverflow() {
         if (!days) return;
@@ -52,15 +54,44 @@
         return end - start;
     }
 
+    function checkTimeAvailable(time: TimeRange, offset: number): boolean {
+        let effective_time_range = new TimeRange(
+            time.day,
+            Time.fromQuarterHours(time.start.asQuarterHours() + offset),
+            Time.fromQuarterHours(time.start.asQuarterHours() + offset + 4),
+        );
+        let val = Array.from(appointments)
+            .filter(app => app.state === AppointmentState.Booked)
+            .every(app => !(effective_time_range.overlaps(app.time_range)));
+
+        return val
+    }
+
     onMount(() => {
         checkDayOverflow();
         checkTimeOverflow();
         window.addEventListener('resize', checkDayOverflow);
         window.addEventListener('resize', checkTimeOverflow);
+
+
+        const calendarObserver = new IntersectionObserver(entries => {
+            console.log(entries[0]);
+        });
+
+        calendarObserver.observe(calendarEl);
     });
 </script>
 
-<div class="calendar-container" style="--num-rows: {endHour - startHour}">
+
+<div class="calendar-legend">
+    <div class="legend--appointment bookable">
+        Available
+    </div>
+    <div class="legend--appointment booked">
+        Booked
+    </div>
+</div>
+<div class="calendar-container" style="--num-rows: {endHour - startHour}" bind:this={calendarEl}>
     <div bind:this={days} class="days">
         {#if shortenDays}
             <div>Sun</div>
@@ -102,14 +133,17 @@
                     data-start-minute={appointment.time_range.start.minute.toString().padStart(2, '0')}
                     data-end-hour={appointment.time_range.end.hour}
                     data-end-minute={appointment.time_range.end.minute.toString().padStart(2, '0')}
-                    >
+                >
                     {#each Array.from({ length: getVisibleDuration(appointment.time_range) - 3 }, (_, i) => i) as offset}
-                        <a
-                            href={`/contact?day=${appointment.time_range.day}&start=${Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset}&end=${
-                            Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset + 4
-                            }`}
-                            style="--offset: {offset}"
-                            aria-label="Inquire about {Time.fromQuarterHours(Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset)} - {Time.fromQuarterHours(Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset + 4)}"/>
+                        {#if checkTimeAvailable(appointment.time_range, offset) }
+                            <a
+                                href={`/contact?day=${appointment.time_range.day}&start=${Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset}&end=${
+                                    Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset + 4
+                                }`}
+                                style="--offset: {offset}"
+                                aria-label="Inquire about {Time.fromQuarterHours(Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset)} - {Time.fromQuarterHours(Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset + 4)}">
+                            </a>
+                        {/if}
                     {/each}
                 </div>
             {/if}
@@ -121,17 +155,43 @@
                 <div />
             {/each}
         {/each}
-                </div>
     </div>
+</div>
 
 <style lang="scss">
     @import 'global';
+
+    .calendar-legend {
+        display: flex;
+        justify-content: center;
+        gap: 1em;
+        margin-bottom: 1em;
+    }
+
+    .legend--appointment {
+        display: flex;
+        padding: 0.3em;
+
+        & {
+            content: "";
+            display: inline-block;
+            width: 10ch;
+            height: 1em;
+            background: var(--inactive-background);
+            outline: 1px solid black;
+            --margin: 0.1em;
+            margin: var(--margin) calc(2 * var(--margin));
+            border-radius: 0.2em;
+        }
+    }
 
     .calendar-container {
         display: grid;
         grid-template-columns: min-content repeat(7, 1fr);
         grid-template-rows: min-content 1fr;
         --gridline-width: 1px;
+        flex-grow: 1;
+        min-height: 800px;
 
         .gridlines {
             grid-column: 2 / -1;
@@ -186,9 +246,14 @@
         grid-row: 2 / -1;
     }
 
+    .bookable {
+        --inactive-background: #4BB1FF;
+        --hover-background: rgba(0, 0, 0, 0.3);
+    }
+
     .appointment {
         outline: 1px solid black;
-        --margin: 0.2em;
+        --margin: 1px;
         margin: var(--margin) calc(2 * var(--margin));
         border-radius: 0.2em;
         display: flex;
@@ -196,28 +261,6 @@
         position: relative;
         background: var(--inactive-background);
 
-        &.bookable {
-            --inactive-background: #4BB1FF;
-            --hover-background: rgba(0, 0, 0, 0.3);
-        }
-
-        &.booked {
-            --inactive-background: rgb(242, 104, 104);
-            --hover-background: rgb(155, 28, 28);
-            --repeat-length: 30px;
-            --stripe-width: 10px;
-            background: repeating-linear-gradient(
-                25deg,
-                var(--inactive-background),
-                var(--inactive-background) calc(var(--repeat-length) - var(--stripe-width)),
-                var(--hover-background) calc(var(--repeat-length) - var(--stripe-width)),
-                var(--hover-background) var(--repeat-length)
-            );
-            
-            a {
-                pointer-events: none;
-            }
-        }
 
         &.show-times::after {
             content: attr(data-start-hour) ':' attr(data-start-minute) ' - ' attr(data-end-hour) ':'
@@ -256,7 +299,7 @@
             }
 
             &:first-child {
-                top: 0;
+                top: calc(var(--offset) * var(--whole-height) / var(--duration) - var(--margin));
                 border-top-left-radius: 0.2em;
                 border-top-right-radius: 0.2em;
             }
@@ -289,9 +332,34 @@
                     border-radius: 0.5em;
                     border-top-left-radius: 0;
                     padding: 0.2em 0.5em;
-                    z-index: 1;
+                    z-index: 8;
+                    pointer-events: none;
                 }
             }
+        }
+
+        .booked {
+            background: red;
+        }
+    }
+
+    .booked {
+        --inactive-background: rgb(242, 104, 104);
+        --hover-background: rgb(155, 28, 28);
+        --repeat-length: 30px;
+        --stripe-width: 10px;
+        background: repeating-linear-gradient(
+            25deg,
+            var(--inactive-background),
+            var(--inactive-background) calc(var(--repeat-length) - var(--stripe-width)),
+            var(--hover-background) calc(var(--repeat-length) - var(--stripe-width)),
+            var(--hover-background) var(--repeat-length)
+            );
+        color: white;
+        z-index: 5;
+
+        a {
+            pointer-events: none;
         }
     }
 </style>
