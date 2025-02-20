@@ -134,14 +134,16 @@
                     data-end-hour={appointment.time_range.end.hour}
                     data-end-minute={appointment.time_range.end.minute.toString().padStart(2, '0')}
                 >
-                    {#each Array.from({ length: getVisibleDuration(appointment.time_range) - 3 }, (_, i) => i).filter(offset => checkTimeAvailable(appointment.time_range, offset)) as offset}
-                        <a
-                            href={`/contact?day=${appointment.time_range.day}&start=${Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset}&end=${
-                                Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset + 4
-                            }`}
-                            style="--offset: {offset}"
-                            aria-label="Inquire about {Time.fromQuarterHours(Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset)} - {Time.fromQuarterHours(Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset + 4)}">
-                        </a>
+                    {#each Array.from({ length: getVisibleDuration(appointment.time_range) - 3 }, (_, i) => i) as offset}
+                        {#if checkTimeAvailable(appointment.time_range, offset) }
+                            <a
+                                href={`/contact?day=${appointment.time_range.day}&start=${Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset}&end=${
+                                    Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset + 4
+                                }`}
+                                style="--offset: {offset}"
+                                aria-label="Inquire about {Time.fromQuarterHours(Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset)} - {Time.fromQuarterHours(Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset + 4)}">
+                            </a>
+                        {/if}
                     {/each}
                 </div>
             {/if}
@@ -297,7 +299,7 @@
             }
 
             &:first-child {
-                top: 0;
+                top: calc(var(--offset) * var(--whole-height) / var(--duration) - var(--margin));
                 border-top-left-radius: 0.2em;
                 border-top-right-radius: 0.2em;
             }

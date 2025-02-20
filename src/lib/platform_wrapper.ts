@@ -40,7 +40,7 @@ class DummyEnv {
 		this.BOOKABLE_TIMES = new DummyKVStore();
 		let example_times = [
 			{
-				time_range: new TimeRange(Day.Thursday, new Time(14, 0), new Time(15, 0)),
+				time_range: new TimeRange(Day.Thursday, new Time(13, 30), new Time(15, 0)),
 				state: AppointmentState.Booked
 			},
 			{
@@ -58,6 +58,10 @@ class DummyEnv {
 			{
 				time_range: new TimeRange(Day.Thursday, new Time(13, 0), new Time(17, 30)),
 				state: AppointmentState.Available
+			},
+			{
+				time_range: new TimeRange(Day.Friday, new Time(13, 0), new Time(14, 0)),
+				state: AppointmentState.Booked
 			},
 			{
 				time_range: new TimeRange(Day.Monday, new Time(13, 0), new Time(14, 0)),
