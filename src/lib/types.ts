@@ -84,9 +84,15 @@ export class TimeRange {
 		};
 	}
 
-    toString() {
-        return `${this.day} ${this.start.toString()} - ${this.end.toString()}`;
-    }
+	toString() {
+		return `${this.day} ${this.start.toString()} - ${this.end.toString()}`;
+	}
+
+	overlaps(other_time: TimeRange): boolean {
+		if (this.day !== other_time.day) return false;
+
+		return this.start <= other_time.start && this.end > other_time.start || this.start >= other_time.start && other_time.end > this.start;
+	}
 }
 
 export enum AppointmentState {

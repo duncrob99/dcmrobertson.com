@@ -45,6 +45,8 @@
 
 	main > :global(*) {
 		grid-area: content;
+		display: flex;
+		flex-direction: column;
 	}
 
 	footer {
