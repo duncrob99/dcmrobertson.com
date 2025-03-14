@@ -39,6 +39,7 @@
 <svelte:head>
 	<title>Contact</title>
 	<meta name="description" content="Contact me to organise a tutoring session or to ask any other questions." />
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </svelte:head>
 
 <div class="preamble">
@@ -88,6 +89,7 @@
         <label for="message">Message</label>
         <textarea name="message" data-required value={form?.data?.message || ''}></textarea> <!-- Optional -->
     </div>
+    <div class="cf-turnstile" data-sitekey="0x4AAAAAABAvxURTw0CuUzbC"></div>
     <input type="submit" value="Submit" />
 </form>
 

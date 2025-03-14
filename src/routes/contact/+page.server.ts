@@ -1,8 +1,9 @@
 import { render } from 'svelte-email';
 import ContactSubmission from '$lib/emails/ContactSubmission.svelte';
 import { fail } from '@sveltejs/kit';
-import { FROM_EMAIL, CONTACT_SUBMISSION_EMAIL, RESEND_API_KEY } from '$env/static/private';
+import { FROM_EMAIL, CONTACT_SUBMISSION_EMAIL, RESEND_API_KEY, TURNSTILE_KEY } from '$env/static/private';
 import { Resend } from 'resend';
+import { validate_slots } from 'svelte/internal';
 
 const resend = new Resend(RESEND_API_KEY);
 
@@ -18,6 +19,24 @@ export const actions = {
             }
             return data;
         });
+
+        const turnstile_token = data.get("cf-turnstile-response");
+        const ip = request.headers.get('CF-Connecting-IP');
+        // Validate the token by calling the
+        // "/siteverify" API endpoint.
+        const url = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+        const valid_turnstile_token = fetch(url, {
+            body: JSON.stringify({
+                secret: TURNSTILE_KEY,
+                response: turnstile_token,
+                remoteip: ip
+            }),
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(resp => resp.json())
+        .then(resp => resp.success);
 
         const missing = required_fields.filter(field => {
             if (!data.has(field)) return true;
@@ -39,6 +58,14 @@ export const actions = {
             template: ContactSubmission,
             props: Object.fromEntries(data)
         });
+
+        if (!await valid_turnstile_token) {
+            return fail(401,
+                        {
+                            error_description: "It seems that Cloudflare thinks you are a bot. If this is in error, please try again or email me at tutoring@dcmrobertson.com",
+                            data: Object.fromEntries(data)
+                        });
+        }
 
         const resend_email_id = await resend.emails.send({
             from: FROM_EMAIL,
