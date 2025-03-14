@@ -13,7 +13,8 @@
 			{ name: 'Home', url: '/' },
 			{ name: 'About', url: '/about' },
 			{ name: 'Availability', url: '/availability' },
-            { name: 'Contact', url: '/contact' },
+      { name: 'Contact', url: '/contact' },
+      { name: 'FAQ', url: '/faq' },
 		],
         //[
 		//	{ name: 'Login', url: '/login' },
