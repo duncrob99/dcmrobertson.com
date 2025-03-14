@@ -34,7 +34,7 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		width: 80ch;
+		max-width: 80ch;
 		justify-content: start;
 		gap: 0.5em;
 	}
