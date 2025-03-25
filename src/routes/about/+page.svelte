@@ -17,7 +17,7 @@
 	</p>
 
 	<p>
-	I tutor mainly in maths (including VCE General and Specialist), physics, general science, and German – all subjects that I have a personal passion for. I have extensive experience in these areas and can adapt to meet each student's individual needs, providing a personalized learning experience.
+	I tutor mainly in maths (including VCE General up to Specialist), but can also provide physics, general science, and German lessons – all subjects that I have a personal passion for. I have extensive experience in these areas and can adapt to meet each student's individual needs, providing a personalized learning experience.
 	</p>
 
 	<p>
