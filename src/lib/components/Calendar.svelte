@@ -107,11 +107,11 @@
 </script>
 
 
-<div class="calendar-legend">
-    <div class="legend--appointment bookable">
+<div class="calendar-legend" style="--num-weeks: {num_weeks};">
+    <div class="legend--appointment bookable" style="--available: {num_weeks}">
         Available
     </div>
-    <div class="legend--appointment booked">
+    <div class="legend--appointment booked" style="--booked: {num_weeks};">
         Booked
     </div>
 </div>
