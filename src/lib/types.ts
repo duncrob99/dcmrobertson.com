@@ -104,3 +104,9 @@ export type Appointment = {
 	time_range: TimeRange;
 	state: AppointmentState;
 }
+
+export type Availability = {
+	time_range: TimeRange;
+	booked: number;
+	available: number;
+}

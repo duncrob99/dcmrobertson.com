@@ -20,6 +20,7 @@
 		} as Appointment
 	});
 	*/
+	/*
 	let appointments = appointments_data.keys.map(val => {
 		const raw_appointment = JSON.parse(val.name) as Appointment;
 		const time_range = TimeRange.fromJSON(JSON.stringify(raw_appointment.time_range));
@@ -29,6 +30,15 @@
 			state
 		};
 	});
+	*/
+	let appointments = JSON.parse(data.calendar).map(json => {
+		return {
+			time_range: TimeRange.fromJSON(JSON.stringify(json.time_range)),
+			state: json.state,
+			booked: json.booked,
+			available: json.available,
+		}
+	});
 </script>
 
 <svelte:head>
@@ -37,6 +47,7 @@
 </svelte:head>
 
 <p>You can see my availability here and choose a suitable time for you. Please note that these times aren't guaranteed to be accurate, so please reach out to me to confirm availability.</p>
-<Calendar appointments={appointments} startHour={9} endHour={21} bind:calendarEl />
+<p>Showing next 10 weeks:</p>
+<Calendar appointments={appointments} startHour={6} endHour={24} num_weeks={10} bind:calendarEl />
 
 <ScrollabilityIndicator scrollMarker={calendarEl} text={"Scroll to view more available times"} />
