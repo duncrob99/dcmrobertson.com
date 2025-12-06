@@ -10,7 +10,7 @@ import { TimeRange, Time, AppointmentState, Day } from "$lib/types";
 import type { Appointment } from "$lib/types";
 import { BUSY_CALENDARS, BOOKED_CALENDAR } from "$env/static/private";
 
-const toDateTime = (icaltime: ICAL.Time) => DateTime.fromISO(icaltime?.toString());
+const toDateTime = (icaltime: ICAL.Time) => DateTime.fromISO(icaltime?.toString(), {zone: "Australia/Melbourne"});
 
 const busy_calendars = BUSY_CALENDARS.split(";");
 const tutoring_calendar = BOOKED_CALENDAR;
