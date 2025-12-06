@@ -1,13 +1,12 @@
 <script lang="ts">
-    import { goto } from '$app/navigation';
-    import { TimeRange, type Appointment, AppointmentState } from '$lib/types';
-    import { Time } from '$lib/types';
+    import { TimeRange, type Availability, AppointmentState } from '$lib/types';
+    import { Time, Day } from '$lib/types';
     import { tick, onMount } from 'svelte';
-	import CalendarOld from './CalendarOld.svelte';
 
-    export let appointments: Appointment[];
+    export let appointments: Availability[];
     export let startHour = 0;
     export let endHour = 24;
+    export let num_weeks = 10;
     let shortenDays = true;
     let days: HTMLDivElement;
 
@@ -36,8 +35,6 @@
         for (const appointment of appointmentsEl.children) {
             const timeStyle = window.getComputedStyle(appointment, ':after');
             const timeWidth = parseFloat(timeStyle.width);
-            console.log(timeWidth, appointment.clientWidth);
-            console.log(timeWidth > appointment.clientWidth);
             if (timeWidth > appointment.clientWidth) {
                 console.log('hiding times due to ', appointment);
                 console.log(timeWidth, appointment.clientWidth);
@@ -80,18 +77,45 @@
 
         calendarObserver.observe(calendarEl);
     });
+
+    let marked_appointments = appointments.map((app, ix) => {
+        const abutsStart = appointments[ix-1]?.time_range.end.toString() === app.time_range.start.toString();
+        const abutsEnd = appointments[ix+1]?.time_range.start.toString() === app.time_range.end.toString();
+        const displayTime = !(ix !== 0 && abutsStart && (appointments[ix-1].booked > 0) === (app.booked > 0) && (appointments[ix-1].available > 0) === (app.available > 0));
+
+        if (app.time_range.day === Day.Friday) {
+            console.log("Friday: ", abutsEnd, app.time_range.toString(), (appointments[ix+1].available ), (app.available));
+        }
+
+        let displayTimeRange = TimeRange.fromJSON(JSON.stringify(app.time_range));
+        let i = ix + 1;
+        while (displayTime && i < appointments.length && appointments[i].time_range.start.toString() === displayTimeRange.end.toString() && (appointments[i].booked > 0) === (app.booked > 0) && (appointments[i].available > 0) === (app.available > 0)) {
+            displayTimeRange.end = appointments[i].time_range.end;
+            i++;
+        }
+
+        return {
+            matchStart: ix !== 0 && abutsStart && (appointments[ix-1].booked > 0) === (app.booked > 0) && (appointments[ix-1].available > 0) === (app.available > 0),
+            matchEnd: ix !== appointments.length-1 && abutsEnd && (appointments[ix+1].booked > 0) === (app.booked > 0) && (appointments[ix+1].available > 0) === (app.available > 0),
+            displayTimeRange,
+            displayTime,
+            abutsStart,
+            abutsEnd,
+            ...app,
+        }
+    });
 </script>
 
 
-<div class="calendar-legend">
-    <div class="legend--appointment bookable">
+<div class="calendar-legend" style="--num-weeks: {num_weeks};">
+    <div class="legend--appointment bookable" style="--available: {num_weeks}">
         Available
     </div>
-    <div class="legend--appointment booked">
+    <div class="legend--appointment booked" style="--booked: {num_weeks};">
         Booked
     </div>
 </div>
-<div class="calendar-container" style="--num-rows: {endHour - startHour}" bind:this={calendarEl}>
+<div class="calendar-container" style="--num-rows: {endHour - startHour}; --num-weeks: {num_weeks}" bind:this={calendarEl}>
     <div bind:this={days} class="days">
         {#if shortenDays}
             <div>Sun</div>
@@ -117,31 +141,36 @@
         {/each}
     </div>
     <div class="appointments" bind:this={appointmentsEl}>
-        {#each appointments as appointment}
-            {#if getVisibleDuration(appointment.time_range) >= 4}
+        {#each marked_appointments as appointment, app_ix}
+            {@const visible_duration = getVisibleDuration(appointment.time_range)}
+            {#if visible_duration >= 1}
                 <div
                     class="appointment"
-                    class:bookable={appointment.state === AppointmentState.Available}
-                    class:booked={appointment.state === AppointmentState.Booked}
-                    class:show-times={showTimes}
+                    class:bookable={appointment.state === AppointmentState.Available || parseInt(appointment.available) > 0}
+                    class:booked={appointment.state === AppointmentState.Booked || parseInt(appointment.booked) > 0}
+                    class:show-times={showTimes && appointment.displayTime}
+                    class:match-start={appointment.matchStart}
+                    class:match-end={appointment.matchEnd}
                     class:testing-time-width={testingTimeWidth}
                     style="grid-row: {Math.max(appointment.time_range.start.asQuarterHours() + 1 - startHour * 4, 1)}
                     / {Math.min(appointment.time_range.end.asQuarterHours() + 1 - startHour * 4, 4 * (endHour - startHour) + 1)};
                     grid-column: {appointment.time_range.day + 1} / {appointment.time_range.day + 2};
-                    --duration: {getVisibleDuration(appointment.time_range)};"
-                    data-start-hour={appointment.time_range.start.hour}
-                    data-start-minute={appointment.time_range.start.minute.toString().padStart(2, '0')}
-                    data-end-hour={appointment.time_range.end.hour}
-                    data-end-minute={appointment.time_range.end.minute.toString().padStart(2, '0')}
+                    --duration: {visible_duration}; --booked: {appointment.booked}; --available: {appointment.available};"
+                    data-start-hour={appointment.displayTimeRange.start.hour}
+                    data-start-minute={appointment.displayTimeRange.start.minute.toString().padStart(2, '0')}
+                    data-end-hour={appointment.displayTimeRange.end.hour}
+                    data-end-minute={appointment.displayTimeRange.end.minute.toString().padStart(2, '0')}
                 >
-                    {#each Array.from({ length: getVisibleDuration(appointment.time_range) - 3 }, (_, i) => i) as offset}
+                    {#each Array.from({ length: visible_duration - (appointment.matchEnd ? 0 : 3) }, (_, i) => i) as offset}
                         {#if checkTimeAvailable(appointment.time_range, offset) }
+                            {@const available = (offset < visible_duration - 3) ? appointment.available : Math.min(appointment.available, appointments[app_ix+1].available)}
                             <a
                                 href={`/contact?day=${appointment.time_range.day}&start=${Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset}&end=${
                                     Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset + 4
                                 }`}
                                 style="--offset: {offset}"
-                                aria-label="Inquire about {Time.fromQuarterHours(Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset)} - {Time.fromQuarterHours(Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset + 4)}">
+                                aria-label="Inquire about {Time.fromQuarterHours(Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset)} - {Time.fromQuarterHours(Math.max(appointment.time_range.start.asQuarterHours(), startHour * 4) + offset + 4)}
+{num_weeks > 1 ? `Available ${available} of the next ${num_weeks} weeks` : ''}">
                             </a>
                         {/if}
                     {/each}
@@ -202,7 +231,7 @@
             gap: var(--gridline-width);
 
             & > div {
-                outline: var(--gridline-width) solid grey;
+                outline: var(--gridline-width) dotted darkgrey;
             }
         }
     }
@@ -246,21 +275,38 @@
         grid-row: 2 / -1;
     }
 
+    .appointment:not(.bookable):not(.booked) {
+        display: none;
+    }
+
     .bookable {
-        --inactive-background: #4BB1FF;
+        --inactive-background: rgba(75, 177, 255, calc(0.8 * var(--available, var(--num-weeks)) * var(--available, var(--num-weeks)) / (var(--num-weeks)*var(--num-weeks)) + 0.2));
         --hover-background: rgba(0, 0, 0, 0.3);
     }
 
     .appointment {
-        outline: 1px solid black;
+        outline: 1px solid lightgrey;
         --margin: 1px;
         margin: var(--margin) calc(2 * var(--margin));
-        border-radius: 0.2em;
+        border-radius: 0.8em;
         display: flex;
         flex-direction: column;
         position: relative;
         background: var(--inactive-background);
 
+        &.match-end {
+            --bottom-radius: 0;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            margin-bottom: 0;
+        }
+
+        &.match-start {
+            --top-radius: 0;
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+            margin-top: 0;
+        }
 
         &.show-times::after {
             content: attr(data-start-hour) ':' attr(data-start-minute) ' - ' attr(data-end-hour) ':'
@@ -289,6 +335,7 @@
             top: calc(var(--offset) * var(--whole-height) / var(--duration) - var(--margin));
             width: 100%;
             height: calc(var(--whole-height) / var(--duration) * 4);
+            z-index: 10;
 
             &:first-child, &:last-child {
                 height: calc(var(--whole-height) / var(--duration) * 4 - var(--margin));
@@ -300,13 +347,13 @@
 
             &:first-child {
                 top: calc(var(--offset) * var(--whole-height) / var(--duration) - var(--margin));
-                border-top-left-radius: 0.2em;
-                border-top-right-radius: 0.2em;
+                border-top-left-radius: var(--top-radius, 0.8em);
+                border-top-right-radius: var(--top-radius, 0.8em);
             }
 
             &:last-child {
-                border-bottom-left-radius: 0.2em;
-                border-bottom-right-radius: 0.2em;
+                border-bottom-left-radius: var(--bottom-radius, 0.8em);
+                border-bottom-right-radius: var(--bottom-radius, 0.8em);
             }
 
             &:hover {
@@ -326,6 +373,7 @@
                     top: 0;
                     left: calc(100% + 0.1em);
                     content: attr(aria-label);
+                    white-space: pre;
                     width: max-content;
                     background: white;
                     box-shadow: 5px 5px 8px rgba(0, 0, 0, 0.2);
@@ -336,10 +384,6 @@
                     pointer-events: none;
                 }
             }
-        }
-
-        .booked {
-            background: red;
         }
     }
 
