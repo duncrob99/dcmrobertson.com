@@ -1,4 +1,5 @@
 import { TimeRange, Day, Time, AppointmentState } from "./types";
+import { dev } from "$app/environment";
 
 class DummyKVStore {
 	data: Record<string, string> = {};
@@ -35,6 +36,7 @@ class DummyKVStore {
 class DummyEnv {
 	BOOKABLE_TIMES: DummyKVStore;
 	ACCOUNTS: DummyKVStore;
+	FUNCTION_CACHE: DummyKVStore;
 
 	constructor() {
 		this.BOOKABLE_TIMES = new DummyKVStore();
@@ -79,6 +81,8 @@ class DummyEnv {
 		this.ACCOUNTS = new DummyKVStore();
 		this.ACCOUNTS.put('admin@admin.com', '{"publicKey": "something", "wrappedPrivateKey": "something else"}');
 		this.ACCOUNTS.put('someone@someplace.com', '{"publicKey": "someone\'s public key", "wrappedPrivateKey": "someone\'s private key"}');
+
+		this.FUNCTION_CACHE = new DummyKVStore();
 	}
 }
 
@@ -86,11 +90,13 @@ class DummyPlatform {
 	env: DummyEnv = new DummyEnv();
 }
 
+const globalDummyPlatform = dev ? new DummyPlatform() : undefined;
+
 export class PlatformWrapper {
 	readonly platform: Readonly<App.Platform>
 
 	constructor(platform?: Readonly<App.Platform>) {
-		this.platform = platform ?? new DummyPlatform();
+		this.platform = platform ?? globalDummyPlatform ?? new DummyPlatform();
 	}
 }
 
@@ -102,4 +108,14 @@ export type KVListType = {
   }[];
   list_complete: boolean;
   cursor: string;
+};
+
+export type KVStore = {
+	get(key: string): Promise<string | null>;
+
+	put(key: string, value: string): Promise<void>;
+
+	delete(key: string): Promise<void>;
+
+	list(prefix?: string): Promise<KVListType>;
 };

@@ -4,14 +4,13 @@
 	import Calendar from '$lib/components/Calendar.svelte';
 	import ScrollabilityIndicator from '$lib/components/ScrollabilityIndicator.svelte';
 	import type { PageData } from './$types';
-	import type { KVListType } from '$lib/platform_wrapper';
 
 	export let data: PageData;
 
 	let calendarEl: HTMLDivElement;
 
-	const appointments_data: KVListType = data.appointments;
 	/*
+	const appointments_data: KVListType = data.appointments;
 	let appointments = appointments_data.keys.map(val => {
 		const time = val.name;
 		return {
@@ -31,7 +30,9 @@
 		};
 	});
 	*/
-	let appointments = JSON.parse(data.calendar).map(json => {
+	let timeRangeParams: string = "0 10";
+	$: num_weeks = timeRangeParams.split(" ")[1];
+	let appointments = JSON.parse(data.calendar).map((json: any) => {
 		return {
 			time_range: TimeRange.fromJSON(JSON.stringify(json.time_range)),
 			state: json.state,
@@ -39,6 +40,27 @@
 			available: json.available,
 		}
 	});
+
+	async function updateAppointments() {
+		appointments = [];
+
+		const params = new URLSearchParams({"start-date-offset": timeRangeParams.split(" ")[0], "num-weeks": timeRangeParams.split(" ")[1]});
+
+		console.log("Fetching: ", `/api/availability?${params.toString()}`);
+
+		appointments = await fetch(`/api/availability?${params.toString()}`)
+		.then(resp => resp.json())
+		.then(json => {
+			console.log("json: ", json);
+			return json.availability.map(avail => {
+			return {
+				time_range: TimeRange.fromJSON(JSON.stringify(avail.time_range)),
+				state: avail.state,
+				booked: avail.booked,
+				available: avail.available,
+			}
+		})});
+	}
 </script>
 
 <svelte:head>
@@ -47,7 +69,19 @@
 </svelte:head>
 
 <p>You can see my availability here and choose a suitable time for you. Please note that these times aren't guaranteed to be accurate, so please reach out to me to confirm availability.</p>
-<p>Showing next 10 weeks:</p>
-<Calendar appointments={appointments} startHour={6} endHour={24} num_weeks={10} bind:calendarEl />
+<select id="time-range-select" bind:value={timeRangeParams} on:change={updateAppointments}>
+	<option value="0 10">Combined next 10 weeks</option>
+	<option value="0 1">This week</option>
+	<option value="1 1">Next week</option>
+</select>
+<Calendar appointments={appointments} startHour={6} endHour={24} bind:num_weeks bind:calendarEl />
 
 <ScrollabilityIndicator scrollMarker={calendarEl} text={"Scroll to view more available times"} />
+
+<style lang="scss">
+	#time-range-select {
+		width: max-content;
+		translate: 0 100%;
+	}
+</style>
+
