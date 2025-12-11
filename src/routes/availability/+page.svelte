@@ -31,8 +31,8 @@
 	});
 	*/
 	let timeRangeParams: string = "0 10";
-	$: num_weeks = timeRangeParams.split(" ")[1];
-	let appointments = JSON.parse(data.calendar).map((json: any) => {
+	$: num_weeks = parseInt(timeRangeParams.split(" ")[1]);
+	let appointments: Availability[] = JSON.parse(data.calendar).map((json: any) => {
 		return {
 			time_range: TimeRange.fromJSON(JSON.stringify(json.time_range)),
 			//state: json.state,
@@ -42,6 +42,7 @@
 	});
 
 	let cached_appointments: {[key: string]: Availability[]} = {};
+	cached_appointments[new URLSearchParams({"start-date-offset": timeRangeParams.split(" ")[0], "num-weeks": timeRangeParams.split(" ")[1]}).toString()] = appointments;
 
 	async function updateAppointments() {
 		const params = new URLSearchParams({"start-date-offset": timeRangeParams.split(" ")[0], "num-weeks": timeRangeParams.split(" ")[1]});
