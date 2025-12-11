@@ -210,7 +210,7 @@ function calculateAvailability(busy_events: Event[], tutoring_events: Event[], r
 
 export async function getAvailability(startDate?: DateTime, numWeeks?: number): Promise<Availability[]> {
 	const rangeStart = startDate ?? DateTime.fromObject({ hour: 0 }, { zone: "Australia/Melbourne" }).endOf("day");
-	const rangeEnd = rangeStart.endOf("day").plus({ weeks: numWeeks ?? 10 });
+	const rangeEnd = rangeStart.plus({ weeks: numWeeks ?? 10 });
 
 	const {busy_events, tutoring_events} = await getCalendarEvents(rangeStart, rangeEnd);
 

@@ -237,6 +237,7 @@
                 /*outline: var(--gridline-width) dotted darkgrey;*/
                 border-top: var(--gridline-width) dotted darkgrey;
                 border-left: var(--gridline-width) dotted darkgrey;
+                translate: calc(-1*var(--gridline-width));
             }
         }
     }
@@ -293,7 +294,7 @@
 
     .appointment {
         outline: 1px solid lightgrey;
-        --margin: 5px;
+        --margin: 3px;
         margin: 1px calc(2 * var(--margin));
         border-radius: 0.8em;
         display: flex;
