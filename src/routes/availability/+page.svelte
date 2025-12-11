@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Day, Time, TimeRange } from '$lib/types';
+	import { type Availability, Day, Time, TimeRange } from '$lib/types';
 	import { AppointmentState, type Appointment } from '$lib/types';
 	import Calendar from '$lib/components/Calendar.svelte';
 	import ScrollabilityIndicator from '$lib/components/ScrollabilityIndicator.svelte';
@@ -35,16 +35,23 @@
 	let appointments = JSON.parse(data.calendar).map((json: any) => {
 		return {
 			time_range: TimeRange.fromJSON(JSON.stringify(json.time_range)),
-			state: json.state,
+			//state: json.state,
 			booked: json.booked,
 			available: json.available,
 		}
 	});
 
-	async function updateAppointments() {
-		appointments = [];
+	let cached_appointments: {[key: string]: Availability[]} = {};
 
+	async function updateAppointments() {
 		const params = new URLSearchParams({"start-date-offset": timeRangeParams.split(" ")[0], "num-weeks": timeRangeParams.split(" ")[1]});
+		const cached = cached_appointments[params.toString()];
+		if (cached) {
+			appointments = cached_appointments[params.toString()];
+			return;
+		}
+
+		appointments = [];
 
 		console.log("Fetching: ", `/api/availability?${params.toString()}`);
 
@@ -55,11 +62,13 @@
 			return json.availability.map(avail => {
 			return {
 				time_range: TimeRange.fromJSON(JSON.stringify(avail.time_range)),
-				state: avail.state,
+				//state: avail.state,
 				booked: avail.booked,
 				available: avail.available,
 			}
 		})});
+
+		cached_appointments[params.toString()] = appointments;
 	}
 </script>
 
@@ -80,8 +89,11 @@
 
 <style lang="scss">
 	#time-range-select {
-		width: max-content;
-		translate: 0 100%;
-	}
+	width: max-content;
+	padding: 0.3rem 0.8rem;
+	background: rgba(255, 255, 255, 0.4);
+	border: none;
+	border-radius: 10px;
+}
 </style>
 
