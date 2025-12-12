@@ -79,7 +79,6 @@
 	<meta name="description" content="See my availability to choose a convenient time for lessons." />
 </svelte:head>
 
-{DateTime.now().zoneName}
 <p>You can see my availability here and choose a suitable time for you. Please note that these times aren't guaranteed to be accurate, so please reach out to me to confirm availability.</p>
 <select id="time-range-select" bind:value={timeRangeParams} on:change={updateAppointments}>
 	<option value="0 10">Combined next 10 weeks</option>
