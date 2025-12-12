@@ -11,7 +11,7 @@ export const GET: RequestHandler = async ({ url, platform }) => {
 	const startDateString = url.searchParams.get("start-date");
 	const startDateOffsetString = url.searchParams.get("start-date-offset") ?? "0";
 
-	const startDate = startDateString ? DateTime.fromISO(startDateString, {zone: "Australia/Melbourne"}) : DateTime.now().startOf("week").plus({weeks: parseInt(startDateOffsetString), days: -1});
+	const startDate = startDateString ? DateTime.fromISO(startDateString, {zone: "Australia/Melbourne"}) : DateTime.now().setZone("Australia/Melbourne").startOf("week").plus({weeks: parseInt(startDateOffsetString), days: -1});
 
 	const numWeeksString = url.searchParams.get("num-weeks") ?? "10";
 	const numWeeks = parseInt(numWeeksString);
