@@ -78,7 +78,7 @@
         calendarObserver.observe(calendarEl);
     });
 
-    let marked_appointments = appointments.map((app, ix) => {
+    $: marked_appointments = appointments.map((app, ix) => {
         const abutsStart = appointments[ix-1]?.time_range.end.toString() === app.time_range.start.toString();
         const abutsEnd = appointments[ix+1]?.time_range.start.toString() === app.time_range.end.toString();
         const displayTime = !(ix !== 0 && abutsStart && (appointments[ix-1].booked > 0) === (app.booked > 0) && (appointments[ix-1].available > 0) === (app.available > 0));
@@ -141,6 +141,7 @@
         {/each}
     </div>
     <div class="appointments" bind:this={appointmentsEl}>
+        {#if appointments.length > 0 }
         {#each marked_appointments as appointment, app_ix}
             {@const visible_duration = getVisibleDuration(appointment.time_range)}
             {#if visible_duration >= 1}
@@ -177,6 +178,7 @@
                 </div>
             {/if}
         {/each}
+        {/if}
     </div>
     <div class="gridlines">
         {#each Array.from({ length: endHour - startHour }, (_, i) => i) as _}
@@ -231,7 +233,10 @@
             gap: var(--gridline-width);
 
             & > div {
-                outline: var(--gridline-width) dotted darkgrey;
+                /*outline: var(--gridline-width) dotted darkgrey;*/
+                border-top: var(--gridline-width) dotted darkgrey;
+                border-left: var(--gridline-width) dotted darkgrey;
+                translate: calc(-1*var(--gridline-width));
             }
         }
     }
@@ -246,7 +251,8 @@
         gap: var(--gridline-width);
 
         & > div {
-            outline: var(--gridline-width) solid grey;
+            /*outline: var(--gridline-width) solid grey;*/
+            border-left: 1px dotted darkgrey;
             padding: 0.5em 0;
             text-align: center;
         }
@@ -261,9 +267,10 @@
 
         & > div {
             grid-row: span 4;
-            padding: 1em;
+            padding: min(1em, 1vw);
             padding-top: 0;
-            outline: var(--gridline-width) solid grey;
+            /*outline: var(--gridline-width) solid grey;*/
+            border-top: 1px dotted darkgrey;
         }
     }
 
@@ -286,8 +293,8 @@
 
     .appointment {
         outline: 1px solid lightgrey;
-        --margin: 1px;
-        margin: var(--margin) calc(2 * var(--margin));
+        --margin: 3px;
+        margin: 1px calc(2 * var(--margin));
         border-radius: 0.8em;
         display: flex;
         flex-direction: column;
@@ -346,7 +353,7 @@
             }
 
             &:first-child {
-                top: calc(var(--offset) * var(--whole-height) / var(--duration) - var(--margin));
+                top: calc(var(--offset) * var(--whole-height) / var(--duration));
                 border-top-left-radius: var(--top-radius, 0.8em);
                 border-top-right-radius: var(--top-radius, 0.8em);
             }

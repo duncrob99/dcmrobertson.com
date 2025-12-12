@@ -204,6 +204,10 @@
             padding-right: 0;
             border-bottom-right-radius: $corner-radius;
 
+            &.collapsed {
+                overflow: hidden;
+            }
+
             ul {
                 border-bottom-right-radius: $corner-radius;
             }

@@ -1,5 +1,8 @@
 import { checkUserAuth } from "$lib/server/auth_utils";
 import { error, redirect } from "@sveltejs/kit";
+import { Settings } from 'luxon';
+
+Settings.defaultZone = "Australia/Melbourne";
 
 const user_restricted_paths = new Map([
     ['/book', 'You must be logged in to book a time'],
