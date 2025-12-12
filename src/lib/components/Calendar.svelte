@@ -104,7 +104,6 @@
             ...app,
         }
     });
-    $: console.log("marked appointments: ", marked_appointments);
 </script>
 
 

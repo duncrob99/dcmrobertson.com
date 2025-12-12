@@ -10,6 +10,8 @@ export const load = (async ({params, platform, fetch}) => {
 
 	const cal = await (await fetch("/api/availability")).json();
 
+	const cal = getAvailability();
+
 	return {
 		//appointments: appointments,
 		calendar: JSON.stringify(cal.availability),
