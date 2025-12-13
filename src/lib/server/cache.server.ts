@@ -12,8 +12,12 @@ export function cache_function(label: string, fn: Function): Function {
 		const searchParams = new URLSearchParams({
 			label: cache_label,
 		}).toString();
-		const cache_resp = await (await fetch(`${ORIGIN}/api/cache?${searchParams}`)).json();
-		console.log("cache response: ", cache_resp);
+		const cache_url =  `${ORIGIN}/api/cache?${searchParams}`;
+		console.log("cache url: ", cache_url);
+		const response = await fetch(cache_url);
+		console.log("response: ", response);
+		const cache_resp = await response.json();
+		console.log("cache response json: ", cache_resp);
 
 		if (cache_resp.success) {
 			return cache_resp.result.value;
