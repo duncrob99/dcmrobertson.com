@@ -10,6 +10,7 @@ import { TimeRange, Time, AppointmentState, Day, type Availability } from "$lib/
 import type { Appointment } from "$lib/types";
 import { BUSY_CALENDARS, BOOKED_CALENDAR } from "$env/static/private";
 import { PlatformWrapper } from '$lib/platform_wrapper';
+import { cache_function } from "./server/cache.server";
 
 function cacheFunction(fn: Function, name: string) {
 	return function(...args: any[]) {
@@ -109,7 +110,6 @@ function calculateAvailability(busy_events: Event[], tutoring_events: Event[], r
 
 	// Split intervals on midnight
 	for (let t=rangeStart; t<=rangeEnd; t = t.plus({days: 1})) {
-		console.log(t);
 		availability = availability.difference(t);
 	}
 
@@ -121,7 +121,6 @@ function calculateAvailability(busy_events: Event[], tutoring_events: Event[], r
 		}
 	});
 
-	console.log(availability_intervals.map(({start, end}) => [start.toISO(), end.toISO()]));
 
 	let booked = new Interval();
 	tutoring_events.forEach(ev => {
@@ -174,9 +173,7 @@ function calculateAvailability(busy_events: Event[], tutoring_events: Event[], r
 			available: available.length,
 		}
 	});
-	console.log(combinedAvailability.map(av => av.time_range.toString()));
 	//combinedAvailability.sort((a, b) => a.time_range.start.asQuarterHours() - b.time_range.start.asQuarterHours());
-	console.log(combinedAvailability.map(av => av.time_range.toString()));
 
 	// Join adjacent times with same availability
 	let i = 0;
@@ -186,19 +183,9 @@ function calculateAvailability(busy_events: Event[], tutoring_events: Event[], r
 		const av2 = combinedAvailability[i+1];
 		const same_availability = av1.time_range.weekday === av2.time_range.weekday && av1.time_range.end.toString() == av2.time_range.start.toString() && (av1.booked > 0) === (av2.booked > 0) && av1.available === av2.available;
 
-		if (av1.time_range.toString() === '6 14:00 - 15:00') {
-			console.log("15:00", av1, av2);
-		}
-
 		if (same_availability) {
-			console.log();
-			console.log("combining:");
-			console.log(av1, av2);
-			console.log(combinedAvailability.map(av => av.time_range.toString()));
-			console.log();
 			combinedAvailability[i].time_range.end = av2.time_range.end;
 			combinedAvailability.splice(i+1, 1);
-			console.log(combinedAvailability[i], combinedAvailability[i+1]);
 		} else {
 			i++;
 		}
@@ -208,7 +195,7 @@ function calculateAvailability(busy_events: Event[], tutoring_events: Event[], r
 	return combinedAvailability;
 }
 
-export async function getAvailability(startDate?: DateTime, numWeeks?: number): Promise<Availability[]> {
+export const getAvailability = cache_function("availability", async (startDate?: DateTime, numWeeks?: number): Promise<Availability[]> => {
 	const rangeStart = startDate ?? DateTime.fromObject({ hour: 0 }, { zone: "Australia/Melbourne" }).endOf("day");
 	const rangeEnd = rangeStart.plus({ weeks: numWeeks ?? 10 });
 
@@ -216,4 +203,4 @@ export async function getAvailability(startDate?: DateTime, numWeeks?: number): 
 
 	const combinedAvailability = calculateAvailability(busy_events, tutoring_events, rangeStart, rangeEnd);
 	return combinedAvailability;
-}
+});
