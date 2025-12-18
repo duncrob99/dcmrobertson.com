@@ -1,4 +1,4 @@
-import { AsyncLocalStorage } from 'node:async_hooks';
+import { AsyncLocalStorage } from 'async_hooks';
 import { PlatformWrapper } from '$lib/platform_wrapper';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
