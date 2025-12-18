@@ -4,7 +4,6 @@
 	import ScrollabilityIndicator from '$lib/components/ScrollabilityIndicator.svelte';
 	import { onMount, tick } from 'svelte';
 	import { fade } from 'svelte/transition';
-	import 'choices.js/public/assets/styles/choices.css';
 
 	let calendarEl: HTMLDivElement;
 
@@ -65,8 +64,6 @@
 	}
 
 	onMount(async () => {
-		// const Choices = (await import('choices.js')).default;
-		// new Choices('#location-select');
 		updateAppointments();
 	});
 
