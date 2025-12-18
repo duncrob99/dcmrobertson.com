@@ -5,7 +5,7 @@ export enum Day {
 	Wednesday = 3,
 	Thursday = 4,
 	Friday = 5,
-	Saturday = 6,
+	Saturday = 6
 }
 
 // export type Time = {
@@ -63,7 +63,11 @@ export class TimeRange {
 
 	public static fromJSON(json: string): TimeRange {
 		const obj = JSON.parse(json);
-		return new TimeRange(obj.day, new Time(obj.start.hour, obj.start.minute), new Time(obj.end.hour, obj.end.minute));
+		return new TimeRange(
+			obj.day,
+			new Time(obj.start.hour, obj.start.minute),
+			new Time(obj.end.hour, obj.end.minute)
+		);
 	}
 
 	duration(): number {
@@ -75,11 +79,11 @@ export class TimeRange {
 			day: this.day,
 			start: {
 				hour: this.start.hour,
-				minute: this.start.minute,
+				minute: this.start.minute
 			},
 			end: {
 				hour: this.end.hour,
-				minute: this.end.minute,
+				minute: this.end.minute
 			}
 		};
 	}
@@ -91,22 +95,26 @@ export class TimeRange {
 	overlaps(other_time: TimeRange): boolean {
 		if (this.day !== other_time.day) return false;
 
-		return this.start <= other_time.start && this.end > other_time.start || this.start >= other_time.start && other_time.end > this.start;
+		return (
+			(this.start <= other_time.start && this.end > other_time.start) ||
+			(this.start >= other_time.start && other_time.end > this.start)
+		);
 	}
 }
 
 export enum AppointmentState {
 	Available,
 	Booked,
+	Traveling
 }
 
 export type Appointment = {
 	time_range: TimeRange;
 	state: AppointmentState;
-}
+};
 
 export type Availability = {
 	time_range: TimeRange;
 	booked: number;
 	available: number;
-}
+};
