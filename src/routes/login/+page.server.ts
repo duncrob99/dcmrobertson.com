@@ -79,6 +79,6 @@ export const actions = {
             console.log(err);
             return fail(400, { erorr: "Database error" });
         }
-        throw redirect(303, "/");
+        redirect(303, "/");
     }
 }

@@ -7,5 +7,5 @@
 		"directory": ".svelte-kit/cloudflare",
 		"not_found_handling": "single-page-application"
 	},
-	"compatibility_flags": ["nodejs_compat", "nodejs_als", "node_compat"]
+	"compatibility_flags": ["nodejs_compat", "nodejs_als"]
 }

@@ -24,24 +24,24 @@ export async function handle({ event, resolve, platform }) {
 			const message =
 				user_restricted_paths.get(event.url.pathname) ??
 				'You must be logged in to access this page';
-			throw redirect(
-				307,
-				'/login?redirect=' +
-					encodeURIComponent(event.url.pathname + event.url.search) +
-					'&message=' +
-					encodeURIComponent(message)
-			);
+			redirect(
+            				307,
+            				'/login?redirect=' +
+            					encodeURIComponent(event.url.pathname + event.url.search) +
+            					'&message=' +
+            					encodeURIComponent(message)
+            			);
 		}
 
 		if (anonymous_restricted_paths.has(event.url.pathname) && event.locals.user) {
 			const message =
 				anonymous_restricted_paths.get(event.url.pathname) ?? 'You are already logged in';
-			throw redirect(307, '/?message=' + encodeURIComponent(message));
+			redirect(307, '/?message=' + encodeURIComponent(message));
 		}
 
 		if (staff_restricted_paths[event.url.pathname] && !event.locals.user?.staff) {
 			const message = staff_restricted_paths[event.url.pathname];
-			throw redirect(307, '/?message=' + encodeURIComponent(message));
+			redirect(307, '/?message=' + encodeURIComponent(message));
 		}
 
 		return await resolve(event);

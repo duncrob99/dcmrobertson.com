@@ -9,5 +9,5 @@ export const GET = async ({ cookies, locals }) => {
 
     locals.user = undefined;
 
-    throw redirect(307, "/");
+    redirect(307, "/");
 };

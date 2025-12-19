@@ -1,4 +1,4 @@
-import { AsyncLocalStorage } from 'async_hooks';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { PlatformWrapper } from '$lib/platform_wrapper';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,8 +22,8 @@ export function getRequestContext<T>(key: string): T | undefined {
 	return store ? store.get(key) : undefined;
 }
 
-export function getPlatform(): PlatformWrapper {
-	const platform = getRequestContext('platform');
+export function getPlatform(): Readonly<App.Platform> {
+	const platform = getRequestContext<Readonly<App.Platform>>('platform');
 	const platform_wrapper = new PlatformWrapper(platform).platform;
 	return platform_wrapper;
 }

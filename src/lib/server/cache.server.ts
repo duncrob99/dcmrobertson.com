@@ -1,6 +1,6 @@
 // import { ORIGIN } from '$env/static/private';
 import { getPlatform } from '$lib/server/requestContext';
-import { DurationLike, DateTime } from 'luxon';
+import { type DurationLike, DateTime } from 'luxon';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function cache_function<F extends (...args: any[]) => Promise<any>>(
