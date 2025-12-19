@@ -1,9 +1,27 @@
-//import { AsyncLocalStorage } from 'node:async_hooks';
-declare const AsyncLocalStorage: typeof import('node:async_hooks').AsyncLocalStorage;
+import { dev } from '$app/environment';
 import { PlatformWrapper } from '$lib/platform_wrapper';
 
+type AsyncLocalStorageInstance<T> = {
+	run<R>(store: T, callback: () => R): R;
+	getStore(): T | undefined;
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const asyncLocalStorage = new AsyncLocalStorage<Map<string, any>>();
+let asyncLocalStorage: AsyncLocalStorageInstance<Map<string, any>>;
+let initialized = false;
+
+async function ensureInitialized() {
+	if (initialized) return;
+
+	// Dynamic import with variable to prevent static analysis/bundling
+	const moduleName = 'node:async_hooks';
+	const { AsyncLocalStorage } = await import(/* @vite-ignore */ moduleName);
+	asyncLocalStorage = new AsyncLocalStorage();
+	initialized = true;
+}
+
+// Initialize immediately via top-level await
+await ensureInitialized();
 
 export function runWithContext<T>(fn: () => T) {
 	return asyncLocalStorage.run(new Map(), fn);
