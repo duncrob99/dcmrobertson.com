@@ -1,4 +1,5 @@
-import { AsyncLocalStorage } from 'node:async_hooks';
+//import { AsyncLocalStorage } from 'node:async_hooks';
+declare const AsyncLocalStorage: typeof import('node:async_hooks').AsyncLocalStorage;
 import { PlatformWrapper } from '$lib/platform_wrapper';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
