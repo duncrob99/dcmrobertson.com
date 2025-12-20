@@ -43,6 +43,9 @@ export function getRequestContext<T>(key: string): T | undefined {
 
 export function getPlatform(): Readonly<App.Platform> {
 	const platform = getRequestContext<Readonly<App.Platform>>('platform');
+	if (!platform) {
+		console.error('Platform not found in request context, using dummy');
+	}
 	const platform_wrapper = new PlatformWrapper(platform).platform;
 	return platform_wrapper;
 }
