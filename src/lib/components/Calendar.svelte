@@ -543,38 +543,26 @@
 		background: #bdc3c7;
 	}
 	.cradle .ball:nth-child(1) {
-		-webkit-animation: ball-1 0.8s ease-out infinite alternate;
-		animation: ball-1 0.8s ease-out infinite alternate;
+		-webkit-animation: ball-1 0.8s ease-in infinite alternate;
+		animation: ball-1 0.8s ease-in infinite alternate;
 	}
 	.cradle .ball:nth-child(5) {
 		-webkit-animation: ball-5 0.8s ease-out 0.8s infinite alternate;
-		animation: ball-5 0.8s ease-out 0.8s infinite alternate;
-	}
-
-	@-webkit-keyframes ball-1 {
-		0%,
-		50% {
-			-webkit-transform: rotate(0);
-			transform: rotate(0);
-		}
-		100% {
-			-webkit-transform: rotate(30deg);
-			transform: rotate(30deg);
-		}
+		animation: ball-5 0.8s ease-out infinite alternate;
 	}
 
 	@keyframes ball-1 {
-		0%,
-		50% {
-			-webkit-transform: rotate(0);
-			transform: rotate(0);
-		}
-		100% {
+		0% {
 			-webkit-transform: rotate(30deg);
 			transform: rotate(30deg);
 		}
+		50%,
+		100% {
+			-webkit-transform: rotate(0);
+			transform: rotate(0);
+		}
 	}
-	@-webkit-keyframes ball-5 {
+	@keyframes ball-5 {
 		0%,
 		50% {
 			-webkit-transform: rotate(0);
