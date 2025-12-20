@@ -232,6 +232,15 @@
 					</div>
 				{/if}
 			{/each}
+		{:else}
+			<div class="loading">Loading...</div>
+			<div class="cradle">
+				<div class="ball" />
+				<div class="ball" />
+				<div class="ball" />
+				<div class="ball" />
+				<div class="ball" />
+			</div>
 		{/if}
 	</div>
 	<div class="gridlines">
@@ -334,6 +343,22 @@
 		grid-template-rows: repeat(calc(var(--num-rows) * 4), 1fr);
 		grid-column: 2 / -1;
 		grid-row: 2 / -1;
+
+		&:has(.loading) {
+			opacity: 0.5;
+			grid-template-columns: 1fr min-content 1fr;
+			grid-template-rows: calc(500% / 18) calc(100% / 18) calc(100% / 18);
+			align-items: end;
+		}
+
+		.loading {
+			height: min-content;
+			font-size: 1.5em;
+			color: grey;
+			grid-column: 2/3;
+			grid-row: 2/3;
+			text-align: center;
+		}
 	}
 
 	.appointment:not(.bookable):not(.booked) {
@@ -474,6 +499,90 @@
 
 		a {
 			pointer-events: none;
+		}
+	}
+
+	.cradle {
+		width: 200px;
+		height: 40px;
+		grid-column: 2/3;
+		grid-row: 3/4;
+		position: relative;
+		scale: 0.8;
+	}
+	.cradle:before {
+		content: '';
+		display: block;
+		position: absolute;
+		width: 200px;
+		height: 6px;
+		top: -3px;
+		left: 0;
+		border-radius: 3px;
+		background: #bdc3c7;
+	}
+	.cradle .ball {
+		position: relative;
+		float: left;
+		width: 40px;
+		height: 40px;
+		background: #000;
+		border-radius: 50%;
+		-webkit-transform-origin: 50% -100px;
+		transform-origin: 50% -100px;
+		top: 100px;
+	}
+	.cradle .ball:before {
+		content: '';
+		display: block;
+		position: absolute;
+		height: 100px;
+		width: 1px;
+		top: -100px;
+		left: 19px;
+		background: #bdc3c7;
+	}
+	.cradle .ball:nth-child(1) {
+		-webkit-animation: ball-1 0.8s ease-out infinite alternate;
+		animation: ball-1 0.8s ease-out infinite alternate;
+	}
+	.cradle .ball:nth-child(5) {
+		-webkit-animation: ball-5 0.8s ease-out 0.8s infinite alternate;
+		animation: ball-5 0.8s ease-out 0.8s infinite alternate;
+	}
+
+	@-webkit-keyframes ball-1 {
+		0%,
+		50% {
+			-webkit-transform: rotate(0);
+			transform: rotate(0);
+		}
+		100% {
+			-webkit-transform: rotate(30deg);
+			transform: rotate(30deg);
+		}
+	}
+
+	@keyframes ball-1 {
+		0%,
+		50% {
+			-webkit-transform: rotate(0);
+			transform: rotate(0);
+		}
+		100% {
+			-webkit-transform: rotate(30deg);
+			transform: rotate(30deg);
+		}
+	}
+	@-webkit-keyframes ball-5 {
+		0%,
+		50% {
+			-webkit-transform: rotate(0);
+			transform: rotate(0);
+		}
+		100% {
+			-webkit-transform: rotate(-30deg);
+			transform: rotate(-30deg);
 		}
 	}
 </style>
