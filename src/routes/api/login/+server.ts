@@ -58,7 +58,7 @@ export const POST = (async ({ request, cookies }) => {
 				secure: true
 			});
 
-            throw redirect(303, "/");
+            redirect(303, "/");
 		} else {
 			return json({ ok: false, error: "Incorrect password" });
 		}

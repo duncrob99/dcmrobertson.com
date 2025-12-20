@@ -1,9 +1,7 @@
 <script lang="ts">
-	import { parse } from 'cookie';
 	import { onMount } from 'svelte';
 
 	let symbols: HTMLElement;
-	let fps: number = 0;
 
 	onMount(() => {
 		const max_density = 0.2; // symbols per 100px^2
@@ -59,7 +57,7 @@
 		}
 
 		// Randomise symbol position
-		Array.from(symbols.children).forEach((node, ix) => {
+		Array.from(symbols.children).forEach((node) => {
 			let symbol = node as HTMLElement;
 			symbol.style.setProperty(
 				'--origin-x',
@@ -104,16 +102,22 @@
 			const origin_force_coefficient = 20;
 			const damping_coefficient = 5;
 
-			let frames = 0;
+			// let frames = 0;
 
-			Array.from(symbols.children).forEach((node, ix) => {
+			Array.from(symbols.children).forEach((node) => {
 				let symbol = node as HTMLElement;
 				let style = getComputedStyle(symbol);
 				let bbox = symbol.getBoundingClientRect();
 
 				let origin = {
-					x: bbox.left + bbox.width / 2 - parseFloat(style.getPropertyValue('translate').split(' ')[0]),
-					y: bbox.top + bbox.height / 2 - parseFloat(style.getPropertyValue('translate').split(' ')[1])
+					x:
+						bbox.left +
+						bbox.width / 2 -
+						parseFloat(style.getPropertyValue('translate').split(' ')[0]),
+					y:
+						bbox.top +
+						bbox.height / 2 -
+						parseFloat(style.getPropertyValue('translate').split(' ')[1])
 					//x: bbox.left + bbox.width / 2 - parseFloat(style.getPropertyValue('--translate-x')),
 					//y: bbox.top + bbox.height / 2 - parseFloat(style.getPropertyValue('--translate-y'))
 				};
@@ -124,7 +128,7 @@
 						clearInterval(int);
 						return;
 					}
-					frames += 1 / symbols.children.length;
+					// frames += 1 / symbols.children.length;
 					bbox = symbol.getBoundingClientRect();
 					let cur_pos = {
 						x: bbox.left + bbox.width / 2,
@@ -175,7 +179,10 @@
 					symbol.style.setProperty('--velocity-y', `${new_vel.y}px`);
 					//symbol.style.setProperty('--translate-x', `${new_pos.x - origin.x}px`);
 					//symbol.style.setProperty('--translate-y', `${new_pos.y - origin.y}px`);
-					symbol.style.setProperty('translate', `${new_pos.x - origin.x}px ${new_pos.y - origin.y}px`);
+					symbol.style.setProperty(
+						'translate',
+						`${new_pos.x - origin.x}px ${new_pos.y - origin.y}px`
+					);
 				}, interval);
 			});
 

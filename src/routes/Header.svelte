@@ -1,64 +1,64 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import logo from '$lib/images/int_dr.svg';
-	import type { User } from '$lib/server/auth_utils';
-	import { stretchy_crossfade } from '$lib/transitions/transitions';
+	// import type { User } from '$lib/server/auth_utils';
 	import { tick, onMount } from 'svelte';
-	import { cubicIn, cubicInOut, cubicOut, quintOut } from 'svelte/easing';
+	import { cubicInOut } from 'svelte/easing';
 	import { crossfade } from 'svelte/transition';
-    import '/src/styles/hamburgers/hamburgers.scss';
+	import '/src/styles/hamburgers/hamburgers.scss';
 
 	export let pages = [
 		[
 			{ name: 'Home', url: '/' },
 			{ name: 'About', url: '/about' },
 			{ name: 'Availability', url: '/availability' },
-      { name: 'Contact', url: '/contact' },
-      { name: 'FAQ', url: '/faq' },
-		],
-        //[
+			{ name: 'Contact', url: '/contact' },
+			{ name: 'FAQ', url: '/faq' }
+		]
+		//[
 		//	{ name: 'Login', url: '/login' },
 		//	{ name: 'Register', url: '/register' }
 		//]
 	];
 
-	export let user: User | undefined;
+	// export let user: User | undefined;
 
+	// let account_links = user
+	// 	? [
+	// 			{ name: `Hello, ${user.email.split('@')[0]}`, url: '/account' },
+	// 			{ name: 'Logout', url: '/logout' }
+	// 	  ]
+	// 	: [
+	// 			{ name: 'Login', url: '/login' },
+	// 			{ name: 'Register', url: '/register' }
+	// 	  ];
 
-    let account_links = user ? [
-        { name: `Hello, ${user.email.split('@')[0]}`, url: '/account' },
-        { name: 'Logout', url: '/logout' }
-    ] : [
-        { name: 'Login', url: '/login' },
-        { name: 'Register', url: '/register' }
-    ];
+	//let links = [...pages, account_links];
+	let links = [...pages, []];
 
-    //let links = [...pages, account_links];
-    let links = [...pages, []];
+	$: currentPage = links.flat().find((page_link) => {
+		const withoutTrailingSlash = page_link.url.replace(/\/$/, '');
+		const pageWithoutTrailingSlash = $page.url.pathname.replace(/\/$/, '');
+		return withoutTrailingSlash === pageWithoutTrailingSlash;
+	})?.url;
 
-    $: currentPage = links.flat().find(page_link => {
-        const withoutTrailingSlash = page_link.url.replace(/\/$/, '');
-        const pageWithoutTrailingSlash = $page.url.pathname.replace(/\/$/, '');
-        return withoutTrailingSlash === pageWithoutTrailingSlash;
-    })?.url;
+	const [send, receive] = crossfade({
+		duration: (d) => Math.sqrt(d * 1000),
 
-    const [send, receive] = crossfade({
-        duration: d => Math.sqrt(d * 1000),
+		fallback(node) {
+			const style = getComputedStyle(node);
+			const transform = style.transform === 'none' ? '' : style.transform;
 
-        fallback(node, params) {
-            const style = getComputedStyle(node);
-            const transform = style.transform === 'none' ? '' : style.transform;
-
-            return {
-                duration: 900,
-                easing: cubicInOut,
-                css: t => `
+			return {
+				duration: 900,
+				easing: cubicInOut,
+				css: (t) => `
                     transform: ${transform} scale(${t});
                     opacity: ${t}
                 `
-            };
-        }
-    });
+			};
+		}
+	});
 
 	let overflow = false;
 	let collapsed = true;
@@ -76,32 +76,37 @@
 		checkOverflow();
 		window.addEventListener('resize', checkOverflow);
 
-        window.addEventListener('click', (e) => {
-            if (collapsed) return;
-            if (e.target !== document.querySelector('nav .hamburger')) {
-                collapsed = true;
-            }
-        });
+		window.addEventListener('click', (e) => {
+			if (collapsed) return;
+			if (e.target !== document.querySelector('nav .hamburger')) {
+				collapsed = true;
+			}
+		});
 	});
 </script>
 
 <header class:overflow class:collapsed>
 	<nav>
-        <a class="logo" href="/"><img src={logo} alt="logo"/></a>
-        {#if overflow}
-            <button class="hamburger hamburger--collapse" class:is-active={!collapsed} type="button" on:click={() => collapsed = !collapsed}>
-                <span class="hamburger-box">
-                    <span class="hamburger-inner"></span>
-                </span>
-            </button>
-        {/if}
+		<a class="logo" href="/"><img src={logo} alt="logo" /></a>
+		{#if overflow}
+			<button
+				class="hamburger hamburger--collapse"
+				class:is-active={!collapsed}
+				type="button"
+				on:click={() => (collapsed = !collapsed)}
+			>
+				<span class="hamburger-box">
+					<span class="hamburger-inner" />
+				</span>
+			</button>
+		{/if}
 		{#each links as pageGroup}
 			<ul>
 				{#each pageGroup as page_link (page_link.url)}
-                    <li aria-current={currentPage === page_link.url ? 'page' : undefined}>
+					<li aria-current={currentPage === page_link.url ? 'page' : undefined}>
 						<a href={page_link.url}>{page_link.name}</a>
-                        {#if currentPage === page_link.url}
-							<div in:receive="{{key: 0}}" out:send="{{key: 0}}" class="underline"></div>
+						{#if currentPage === page_link.url}
+							<div in:receive={{ key: 0 }} out:send={{ key: 0 }} class="underline" />
 						{/if}
 					</li>
 				{/each}
@@ -115,106 +120,106 @@
 
 	header {
 		$background: rgba(255, 255, 255, 1);
-        $corner-radius: 20px;
-        --max-width: 90%;
+		$corner-radius: 20px;
+		--max-width: 90%;
 
-        background: $background;
-        display: grid;
-        grid-template-columns: 1fr min($content-width, 100%) 1fr;
-        grid-template-areas: '. content .';
-        padding: 0 1rem;
-        height: $navbar-height;
-        z-index: 10;
-        position: fixed;
-        top: 0;
-        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-        width: calc(var(--max-width) - 2rem);
+		background: $background;
+		display: grid;
+		grid-template-columns: 1fr min($content-width, 100%) 1fr;
+		grid-template-areas: '. content .';
+		padding: 0 1rem;
+		height: $navbar-height;
+		z-index: 10;
+		position: fixed;
+		top: 0;
+		box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+		width: calc(var(--max-width) - 2rem);
 
-        nav {
-            grid-area: content;
-            display: grid;
-            grid-template-columns: 1fr min-content;
+		nav {
+			grid-area: content;
+			display: grid;
+			grid-template-columns: 1fr min-content;
 
-            ul {
-                grid-column: 1 / 3;
-                transition: transform 0.3s ease-in-out;
-                margin: 0;
-                margin-left: -1em;
-                list-style: none;
-                padding-left: 1em;
+			ul {
+				grid-column: 1 / 3;
+				transition: transform 0.3s ease-in-out;
+				margin: 0;
+				margin-left: -1em;
+				list-style: none;
+				padding-left: 1em;
 
-                &:first-of-type {
-                    padding-top: 100%;
-                    margin-top: -100%;
-                }
+				&:first-of-type {
+					padding-top: 100%;
+					margin-top: -100%;
+				}
 
-                li {
-                    margin-block: 1rem;
+				li {
+					margin-block: 1rem;
 
-                    &[aria-current='page'] {
-                        a {
-                            color: var(--color-theme-1);
-                        }
-                    }
-                }
-            }
+					&[aria-current='page'] {
+						a {
+							color: var(--color-theme-1);
+						}
+					}
+				}
+			}
 
-            > * {
-                background: $background;
-            }
-        }
+			> * {
+				background: $background;
+			}
+		}
 
-        .hamburger {
-            height: $navbar-height;
-            aspect-ratio: 1;
-            z-index: 1;
-            border-bottom-right-radius: $corner-radius;
-            padding: 0;
-            opacity: 1 !important;
+		.hamburger {
+			height: $navbar-height;
+			aspect-ratio: 1;
+			z-index: 1;
+			border-bottom-right-radius: $corner-radius;
+			padding: 0;
+			opacity: 1 !important;
 
-            * {
-                pointer-events: none;
-            }
-        }
+			* {
+				pointer-events: none;
+			}
+		}
 
-        nav a {
-            display: flex;
-            align-items: center;
-            padding: 0 0.5rem;
-            color: var(--color-text);
-            font-weight: 700;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            text-decoration: none;
-            transition: color 0.2s linear;
+		nav a {
+			display: flex;
+			align-items: center;
+			padding: 0 0.5rem;
+			color: var(--color-text);
+			font-weight: 700;
+			font-size: 0.8rem;
+			text-transform: uppercase;
+			letter-spacing: 0.1em;
+			text-decoration: none;
+			transition: color 0.2s linear;
 
-            &.logo {
-                height: $navbar-height;
-                z-index: 1;
-            }
-        }
+			&.logo {
+				height: $navbar-height;
+				z-index: 1;
+			}
+		}
 
-        &.collapsed.overflow ul {
-            transform: translateY(-100%);
-            pointer-events: none;
-        }
+		&.collapsed.overflow ul {
+			transform: translateY(-100%);
+			pointer-events: none;
+		}
 
-        &.overflow {
-            padding-right: 0;
-            border-bottom-right-radius: $corner-radius;
+		&.overflow {
+			padding-right: 0;
+			border-bottom-right-radius: $corner-radius;
 
-            &.collapsed {
-                overflow: hidden;
-            }
+			&.collapsed {
+				overflow: hidden;
+			}
 
-            ul {
-                border-bottom-right-radius: $corner-radius;
-            }
-        }
+			ul {
+				border-bottom-right-radius: $corner-radius;
+			}
+		}
 
 		&:not(.overflow) {
-            --max-width: 100%;
+			--max-width: 100%;
 
 			nav {
 				grid-area: content;
@@ -252,9 +257,9 @@
 				}
 			}
 
-            nav a {
-                height: 100%;
-            }
+			nav a {
+				height: 100%;
+			}
 		}
 
 		a:hover {
