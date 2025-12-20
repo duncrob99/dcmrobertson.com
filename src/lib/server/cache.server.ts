@@ -1,6 +1,6 @@
 // import { ORIGIN } from '$env/static/private';
 import { getPlatform } from '$lib/server/requestContext';
-import { type DurationLike, DateTime } from 'luxon';
+import { type DurationLike, DateTime, Duration } from 'luxon';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function cache_function<F extends (...args: any[]) => Promise<any>>(
@@ -79,7 +79,10 @@ export function cache_function<F extends (...args: any[]) => Promise<any>>(
 			JSON.stringify({
 				value: function_result,
 				expires: expires ? DateTime.now().plus(expires).toISO() : null
-			})
+			}),
+			{
+				expirationTtl: expires ? Duration.fromDurationLike(expires).as('seconds') : undefined
+			}
 		);
 
 		return function_result;
