@@ -33,11 +33,21 @@ type Event = {
 	type: EventType;
 };
 
+function eventFromJSON(json: any): Event {
+	return {
+		...json,
+		start: DateTime.fromISO(json.start),
+		end: DateTime.fromISO(json.end)
+	};
+}
+
 async function getEvents(cal: string, rangeStart: DateTime, rangeEnd: DateTime): Promise<Event[]> {
 	//const icals = await Promise.all(cals.map(async cal => await (await fetch(cal)).text()));
 	//const jcals = icals.map(ICAL.parse);
 	console.log('events from: ', cal);
-	const ical = await (await fetch(cal)).text();
+	const ical = await cache_function('icalFetch', async (cal) => await (await fetch(cal)).text(), {
+		minutes: 15
+	})(cal);
 	const jcal = ICAL.parse(ical);
 	const events = new ICAL.Component(jcal)
 		.getAllSubcomponents('vevent')
@@ -107,95 +117,20 @@ async function getEvents(cal: string, rangeStart: DateTime, rangeEnd: DateTime):
 	return dets;
 }
 
-async function getCalendarEvents(rangeStart: DateTime, rangeEnd: DateTime): Promise<Event[]> {
-	return (
-		await Promise.all(
-			busy_calendars.concat([tutoring_calendar]).map((cal) => getEvents(cal, rangeStart, rangeEnd))
-		)
-	).flat();
-}
-
-type LatLon = [number, number];
-
-async function getLocation(loc: string): Promise<LatLon> {
-	const searchParams = new URLSearchParams({
-		api_key:
-			'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjNmMGY5Njc3MDU0YzQ1ZTJhMDE3N2E1ZDJjMjliZGY0IiwiaCI6Im11cm11cjY0In0=',
-		text: loc,
-		'boundary.country': 'AU',
-		size: '1'
-	});
-	const url = `https://api.openrouteservice.org/geocode/search?${searchParams.toString()}`;
-	const resp = await fetch(url);
-	const body = await resp.json();
-	const bbox = body.bbox;
-	const centre: LatLon = [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2];
-	return centre;
-}
-
-async function getMatrix(locations: { name: string; latlon: LatLon }[], center: LatLon) {
-	//const Matrix = new Openrouteservice.Matrix({ api_key: "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjNmMGY5Njc3MDU0YzQ1ZTJhMDE3N2E1ZDJjMjliZGY0IiwiaCI6Im11cm11cjY0In0=" });
-
-	console.log(locations.map((loc) => loc.latlon).concat([center]));
-	const body = JSON.stringify({
-		locations: locations.map((loc) => loc.latlon).concat([center]),
-		sources: [locations.length]
-	});
-	console.log(body);
-	const response = await fetch('https://api.openrouteservice.org/v2/matrix/driving-car', {
-		method: 'POST',
-		body,
-		headers: {
-			Accept: 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8',
-			Authorization:
-				'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjNmMGY5Njc3MDU0YzQ1ZTJhMDE3N2E1ZDJjMjliZGY0IiwiaCI6Im11cm11cjY0In0=',
-			'Content-Type': 'application/json; charset=utf-8'
-		}
-	});
-	const json = await response.json();
-	const duration_values = json.durations[0].map((dur: number) =>
-		Duration.fromObject({ seconds: dur })
-	);
-	const durations = duration_values.map((val: Duration, i: number) => {
-		return { ...locations[i], timeFromCenter: val.rescale().toHuman({ showZeros: false }) };
-	});
-	console.log('durations: ', durations);
-
-	/*
-		 try {
-		 console.log("getting matrix");
-		 let response = await Matrix.calculate({
-locations: locations.map(loc => loc.latlon).push(center),
-profile: "driving-car",
-sources: ['all'],
-destinations: ['all'],
-})
-	// Add your own result handling here
-	console.log("response: ", response)
-
-	} catch (err) {
-	console.log("An error occurred: " + err)
-	//console.error(await err.response.json())
-	}
-	console.log("done getting matrix");
-	 */
-}
-
-/* https://stackoverflow.com/questions/57001515/sliding-window-over-array-in-javascript */
-function toWindows<T>(inputArray: T[], size: number): T[][] {
-	return inputArray.reduce((acc, _, index, arr) => {
-		if (index + size > arr.length) {
-			//we've reached the maximum number of windows, so don't add any more
-			return acc;
-		}
-
-		//add a new window of [currentItem, maxWindowSizeItem)
-		return acc.concat(
-			//wrap in extra array, otherwise .concat flattens it
-			[arr.slice(index, index + size)]
-		);
-	}, []);
-}
+const getCalendarEvents = cache_function(
+	'getCalendarEvents',
+	async (rangeStart: DateTime, rangeEnd: DateTime): Promise<Event[]> => {
+		return (
+			await Promise.all(
+				busy_calendars
+					.concat([tutoring_calendar])
+					.map((cal) => getEvents(cal, rangeStart, rangeEnd))
+			)
+		).flat();
+	},
+	{ minutes: 15 },
+	(evList) => evList.map(eventFromJSON)
+);
 
 async function getTravel(events: Event[], location: string): Promise<Event[]> {
 	let travel: Event[] = [];
@@ -279,23 +214,25 @@ function calculateAvailability(
 	console.log('calculateAvailability');
 	const busy_events = events.map(roundEventOut);
 	const tutoring_events = events.filter((ev) => ev.type === EventType.Tutoring).map(roundEventOut);
+	console.log('Done filtering & rounding');
 
+	console.log('Num busy events:', busy_events.length);
 	let availability: Interval = new Interval(rangeStart, rangeEnd);
 	busy_events.forEach((ev) => {
+		availability = availability.difference(ev.start, ev.end);
 		let start = ev.start;
 		while (availability.intersection(start, ev.end).intervals().length > 0) {
-			availability = availability.difference(
-				new Interval.Endpoint(start, false),
-				new Interval.Endpoint(ev.end, true)
-			);
+			availability = availability.difference(start, ev.end);
 			start = start.plus({ minute: 1 });
 		}
 	});
+	console.log('Done busy events loop');
 
 	// Split intervals on midnight
 	for (let t = rangeStart; t <= rangeEnd; t = t.plus({ days: 1 })) {
 		availability = availability.difference(t);
 	}
+	console.log('Done midnight split');
 
 	const availability_intervals: { start: DateTime; end: DateTime; state: AppointmentState }[] =
 		availability.intervals().map((int: Interval) => {

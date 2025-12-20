@@ -7,7 +7,7 @@ export function cache_function<F extends (...args: any[]) => Promise<any>>(
 	label: string,
 	fn: F,
 	expires?: DurationLike,
-	deserialiser?: (value: string) => Awaited<ReturnType<F>>
+	deserialiser?: (value: any) => Awaited<ReturnType<F>>
 ): (...args: Parameters<F>) => ReturnType<F> {
 	const result = (async (...args: Parameters<F>) => {
 		const cache_label = JSON.stringify({
@@ -18,8 +18,6 @@ export function cache_function<F extends (...args: any[]) => Promise<any>>(
 
 		const platform = getPlatform();
 		const cache = platform?.env?.FUNCTION_CACHE;
-
-		console.log('cache list', await cache?.list());
 
 		const raw_res = await cache?.get(cache_label);
 		const result = JSON.parse(raw_res || 'null');
