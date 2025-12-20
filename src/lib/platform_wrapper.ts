@@ -148,3 +148,13 @@ export type KVStore = {
 
 	list(prefix?: string): Promise<KVListType>;
 };
+
+export type KVStore = {
+	get(key: string): Promise<string | null>;
+
+	put(key: string, value: string): Promise<void>;
+
+	delete(key: string): Promise<void>;
+
+	list(prefix?: string): Promise<KVListType>;
+};

@@ -7,41 +7,8 @@
 
 	let calendarEl: HTMLDivElement;
 
-	/*
-	const appointments_data: KVListType = data.appointments;
-	let appointments = appointments_data.keys.map(val => {
-		const time = val.name;
-		return {
-			time_range: TimeRange.fromJSON(time),
-			state: AppointmentState.Available
-		} as Appointment
-	});
-	*/
-	/*
-	let appointments = appointments_data.keys.map(val => {
-		const raw_appointment = JSON.parse(val.name) as Appointment;
-		const time_range = TimeRange.fromJSON(JSON.stringify(raw_appointment.time_range));
-		const state = raw_appointment.state;
-		return {
-			time_range,
-			state
-		};
-	});
-	*/
 	let timeRangeParams = '0 1';
 	$: num_weeks = parseInt(timeRangeParams.split(' ')[1]);
-	/*
-	let appointments: Availability[] = JSON.parse(data.calendar).map(
-		(json: { [key: string]: string }) => {
-			return {
-				time_range: TimeRange.fromJSON(JSON.stringify(json.time_range)),
-				//state: json.state,
-				booked: json.booked,
-				available: json.available
-			};
-		}
-	);
-	*/
 	let appointments: Availability[] = [];
 
 	let cached_appointments: { [key: string]: Availability[] } = {};
