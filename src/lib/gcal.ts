@@ -197,12 +197,16 @@ async function getTravel(events: Event[], location: string): Promise<Event[]> {
 	return travel;
 }
 
-// Round event times to 15 minuets, only expanding
+// Round event times to 15 minutes, only expanding
 function roundEventOut(event: Event): Event {
+	const startMins =
+		event.start.minute + event.start.second / 60 + event.start.millisecond / (1000 * 60);
+	const endMins = event.end.minute + event.end.second / 60 + event.end.millisecond / (1000 * 60);
+
 	return {
 		...event,
-		start: event.start.minus({ minute: event.start.minute % 15 }),
-		end: event.end.plus({ minute: 15 - (event.end.minute % 15) })
+		start: event.start.minus({ minute: startMins % 15 }),
+		end: event.end.plus({ minute: 15 - (endMins % 15 || 15) })
 	};
 }
 
