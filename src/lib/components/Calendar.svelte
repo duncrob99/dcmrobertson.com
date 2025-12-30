@@ -10,7 +10,7 @@
 	let shortenDays = true;
 	let days: HTMLDivElement;
 
-	let showTimes = true;
+	let showTimes = false;
 	let testingTimeWidth = false;
 	let appointmentsEl: HTMLDivElement;
 	export let calendarEl: HTMLDivElement;
@@ -136,6 +136,12 @@
 			...app
 		};
 	});
+
+	$: {
+		console.log('marked_appointments changed');
+		marked_appointments;
+		checkTimeOverflow();
+	}
 </script>
 
 <div class="calendar-legend" style="--num-weeks: {num_weeks};">
