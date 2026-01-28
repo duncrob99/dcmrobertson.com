@@ -1,5 +1,5 @@
 // import { ORIGIN } from '$env/static/private';
-import { getPlatform } from '$lib/server/requestContext';
+import { getPlatform, saveLog, saveTimedLog } from '$lib/server/requestContext';
 import { type DurationLike, DateTime, Duration } from 'luxon';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -14,7 +14,10 @@ export function cache_function<F extends (...args: any[]) => Promise<any>>(
 			label,
 			args
 		});
-		console.log('cache label: ', cache_label);
+
+		let logs = [];
+		const startTime = DateTime.now();
+		logs.push(`cache label: ${cache_label}`);
 
 		const platform = getPlatform();
 		const cache = platform?.env?.FUNCTION_CACHE;
@@ -24,16 +27,18 @@ export function cache_function<F extends (...args: any[]) => Promise<any>>(
 		const expired = result && result.expires && DateTime.now() > DateTime.fromISO(result.expires);
 
 		if (result && !expired) {
-			console.log('cache hit');
+			logs.push('cache hit');
 			if (deserialiser) {
+				saveTimedLog(startTime, ...logs);
 				return deserialiser(result.value);
 			} else {
+				saveTimedLog(startTime, ...logs);
 				return result.value;
 			}
 		} else if (expired) {
-			console.log('cache expired');
+			logs.push('cache expired');
 		} else {
-			console.log('cache miss');
+			logs.push('cache miss');
 		}
 		/*
 		const searchParams = new URLSearchParams({
@@ -85,6 +90,7 @@ export function cache_function<F extends (...args: any[]) => Promise<any>>(
 			}
 		);
 
+		saveTimedLog(startTime, ...logs);
 		return function_result;
 	}) as (...args: Parameters<F>) => ReturnType<F>;
 

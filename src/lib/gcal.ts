@@ -11,6 +11,7 @@ import type { Appointment } from '$lib/types';
 import { BUSY_CALENDARS, BOOKED_CALENDAR } from '$env/static/private';
 import { cache_function } from '$lib/server/cache.server';
 import { getTravelTime, TimeType } from '$lib/routing';
+import { saveLog } from './server/requestContext';
 
 const toDateTime = (icaltime: ICAL.Time): DateTime =>
 	DateTime.fromISO(icaltime?.toString(), { zone: 'Australia/Melbourne' });
@@ -44,7 +45,7 @@ function eventFromJSON(json: any): Event {
 async function getEvents(cal: string, rangeStart: DateTime, rangeEnd: DateTime): Promise<Event[]> {
 	//const icals = await Promise.all(cals.map(async cal => await (await fetch(cal)).text()));
 	//const jcals = icals.map(ICAL.parse);
-	console.log('events from: ', cal);
+	saveLog('events from: ', cal);
 	const ical = await cache_function('icalFetch', async (cal) => await (await fetch(cal)).text(), {
 		minutes: 15
 	})(cal);
@@ -138,7 +139,7 @@ async function getTravel(events: Event[], location: string): Promise<Event[]> {
 		events.map(async (ev, i) => {
 			if (i > 0 && ev.location) {
 				const timeBefore = await getTravelTime(location, ev.location, ev.start, TimeType.Arrival);
-				console.log(`Travel to ${ev.location} takes ${timeBefore.rescale().toHuman()} minutes`);
+				saveLog(`Travel to ${ev.location} takes ${timeBefore.rescale().toHuman()} minutes`);
 				travel.push({
 					title: `Travel to ${ev.location}`,
 					type: EventType.Travel,
@@ -149,7 +150,7 @@ async function getTravel(events: Event[], location: string): Promise<Event[]> {
 			}
 			if (i < events.length && ev.location) {
 				const timeAfter = await getTravelTime(ev.location, location, ev.end, TimeType.Departure);
-				console.log(`Travel from ${ev.location} takes ${timeAfter.rescale().toHuman()} minutes`);
+				saveLog(`Travel from ${ev.location} takes ${timeAfter.rescale().toHuman()} minutes`);
 				travel.push({
 					title: `Travel from ${ev.location}`,
 					type: EventType.Travel,
@@ -166,13 +167,13 @@ async function getTravel(events: Event[], location: string): Promise<Event[]> {
 	// Remove overlap with other events and previous travel
 	travel = travel
 		.map((trv, ix) => {
-			console.log(`Travel ${ix + 1}: ${trv.title} (${trv.start.toISO()} - ${trv.end.toISO()})`);
+			saveLog(`Travel ${ix + 1}: ${trv.title} (${trv.start.toISO()} - ${trv.end.toISO()})`);
 			let trv_int = new Interval(trv.start, trv.end);
 			for (const ev of events.concat(travel.slice(0, ix))) {
 				if (ev.start >= trv.end) break;
 				if (ev.end <= trv.start) continue;
 
-				console.log(`Overlapping event: ${ev.title} (${ev.start.toISO()} - ${ev.end.toISO()})`);
+				saveLog(`Overlapping event: ${ev.title} (${ev.start.toISO()} - ${ev.end.toISO()})`);
 
 				const ev_int = new Interval(ev.start, ev.end);
 				trv_int = trv_int.difference(ev_int);
@@ -182,7 +183,7 @@ async function getTravel(events: Event[], location: string): Promise<Event[]> {
 				trv_int.intervals().length === 0 ||
 				+trv_int.intervals()[0].start.value() === +trv_int.intervals()[0].end.value()
 			) {
-				console.log(`Travel ${ix + 1} is fully overlapped`);
+				saveLog(`Travel ${ix + 1} is fully overlapped`);
 				return undefined;
 			}
 
@@ -215,12 +216,12 @@ function calculateAvailability(
 	rangeStart: DateTime,
 	rangeEnd: DateTime
 ): Availability[] {
-	console.log('calculateAvailability');
+	saveLog('calculateAvailability');
 	const busy_events = events.map(roundEventOut);
 	const tutoring_events = events.filter((ev) => ev.type === EventType.Tutoring).map(roundEventOut);
-	console.log('Done filtering & rounding');
+	saveLog('Done filtering & rounding');
 
-	console.log('Num busy events:', busy_events.length);
+	saveLog('Num busy events:', busy_events.length);
 	const mergeIntervals = (items: Event[]): { start: DateTime; end: DateTime }[] => {
 		const sorted = items
 			.map((event) => ({ start: event.start, end: event.end }))
@@ -238,7 +239,7 @@ function calculateAvailability(
 	};
 
 	const busyIntervals = mergeIntervals(busy_events);
-	console.log('Merged busy events:', busyIntervals.length);
+	saveLog('Merged busy events:', busyIntervals.length);
 
 	const availabilityIntervals: { start: DateTime; end: DateTime }[] = [];
 	let cursor = rangeStart;
@@ -259,7 +260,7 @@ function calculateAvailability(
 	if (cursor.toMillis() < rangeEnd.toMillis()) {
 		availabilityIntervals.push({ start: cursor, end: rangeEnd });
 	}
-	console.log('Done busy events loop');
+	saveLog('Done busy events loop');
 
 	const splitByMidnight = (items: { start: DateTime; end: DateTime }[]) => {
 		const split: { start: DateTime; end: DateTime }[] = [];
@@ -282,14 +283,14 @@ function calculateAvailability(
 			end: int.end,
 			state: AppointmentState.Available
 		}));
-	console.log('calculated availability intervals');
+	saveLog('calculated availability intervals');
 
 	const booked = mergeIntervals(tutoring_events).map((int) => ({
 		start: int.start,
 		end: int.end,
 		state: AppointmentState.Booked
 	}));
-	console.log('calculated booked intervals');
+	saveLog('calculated booked intervals');
 
 	const appointments: Appointment[] = availability_intervals.concat(booked).map((int) => {
 		if (int.end.hour === 0 && int.end.minute === 0) {
@@ -307,7 +308,7 @@ function calculateAvailability(
 			)
 		};
 	});
-	console.log('calculated appointments');
+	saveLog('calculated appointments');
 
 	function toHours(app: Appointment): { start: number; end: number } {
 		const start = app.time_range.day * 24 + app.time_range.start.asQuarterHours() / 4;
@@ -345,7 +346,7 @@ function calculateAvailability(
 		}
 	}
 
-	console.log('calculated combined intervals');
+	saveLog('calculated combined intervals');
 
 	const combinedAvailability: Availability[] = [];
 	let bookedCount = 0;
@@ -366,7 +367,7 @@ function calculateAvailability(
 		});
 	}
 
-	console.log('calculated combined availability');
+	saveLog('calculated combined availability');
 
 	const mergedAvailability: Availability[] = [];
 	const state = (av: Availability): string | number => (av.booked > 0 ? 'booked' : av.available);
@@ -384,7 +385,7 @@ function calculateAvailability(
 		mergedAvailability.push(current);
 	}
 
-	console.log('joined adjacent times with same availability');
+	saveLog('joined adjacent times with same availability');
 
 	return mergedAvailability;
 }
