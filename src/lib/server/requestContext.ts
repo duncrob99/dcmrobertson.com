@@ -1,5 +1,6 @@
 import { dev } from '$app/environment';
 import { PlatformWrapper } from '$lib/platform_wrapper';
+import { DateTime } from 'luxon';
 
 type AsyncLocalStorageInstance<T> = {
 	run<R>(store: T, callback: () => R): R;
@@ -27,10 +28,11 @@ export function runWithContext<T>(fn: () => T) {
 	return asyncLocalStorage.run(new Map(), fn);
 }
 
-export function setRequestContext<T>(key: string, value: T) {
+export function setRequestContext<T>(key: string, value: T): T | undefined {
 	const store = asyncLocalStorage.getStore();
 	if (store) {
 		store.set(key, value);
+		return value;
 	} else {
 		console.error('AsyncLocalStorage store is not available');
 	}
@@ -48,4 +50,26 @@ export function getPlatform(): Readonly<App.Platform> {
 	}
 	const platform_wrapper = new PlatformWrapper(platform).platform;
 	return platform_wrapper;
+}
+
+export function saveLog(...msgs: any[]) {
+	const logs =
+		getRequestContext<{ msg: string; time: DateTime }[]>('logs') ?? setRequestContext('logs', []);
+	if (!logs) return;
+
+	logs.push({ msg: msgs.join(' '), time: DateTime.now() });
+}
+
+export function saveTimedLog(time: DateTime, ...msgs: any[]) {
+	const logs =
+		getRequestContext<{ msg: string; time: DateTime }[]>('logs') ?? setRequestContext('logs', []);
+	if (!logs) return;
+
+	logs.push({ msg: msgs.join(' '), time });
+}
+
+export function printLogs() {
+	const logs = getRequestContext<{ msg: string; time: DateTime }[]>('logs') ?? [];
+	logs.sort((a, b) => a.time.diff(b.time).milliseconds);
+	logs.forEach((log) => console.log(`${log.time.toISO()} - ${log.msg}`));
 }

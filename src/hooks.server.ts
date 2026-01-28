@@ -1,7 +1,13 @@
 import { checkUserAuth } from '$lib/server/auth_utils';
 import { redirect } from '@sveltejs/kit';
-import { Settings } from 'luxon';
-import { runWithContext, setRequestContext } from '$lib/server/requestContext';
+import { DateTime, Settings } from 'luxon';
+import {
+	getRequestContext,
+	printLogs,
+	runWithContext,
+	saveLog,
+	setRequestContext
+} from '$lib/server/requestContext';
 
 Settings.defaultZone = 'Australia/Melbourne';
 
@@ -53,6 +59,11 @@ export async function handle({ event, resolve }) {
 			);
 		}
 
-		return await resolve(event);
+		const response = await resolve(event);
+
+		saveLog(`Request completed with status ${response.status}`);
+		printLogs();
+
+		return response;
 	});
 }

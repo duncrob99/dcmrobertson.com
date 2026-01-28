@@ -1,6 +1,7 @@
 import { DateTime, Duration } from 'luxon';
 import { cache_function } from '$lib/server/cache.server';
 import { GOOGLE_API } from '$env/static/private';
+import { saveLog } from '$lib/server/requestContext';
 
 let total_requests = 0;
 
@@ -31,11 +32,6 @@ export const getSimpleTravelTime = cache_function(
 		const normalizedDepartureTime = departureTime?.plus({
 			weeks: -1 * Math.ceil(departureTime.diffNow('weeks').weeks) + 52
 		});
-		console.log(
-			`Current departure time: ${departureTime}, weeks diff: ${
-				departureTime?.diffNow('weeks').weeks
-			}, normalised: ${normalizedDepartureTime}`
-		);
 
 		// Check if time is already normalised to the current week one year in the future
 		if (departureTime && normalizedDepartureTime && +departureTime !== +normalizedDepartureTime) {
@@ -63,7 +59,7 @@ export const getSimpleTravelTime = cache_function(
 		).json();
 
 		total_requests++;
-		console.log(
+		saveLog(
 			'Total Routes Requests',
 			total_requests,
 			`${from} -> ${to} at ${normalizedDepartureTime}`
@@ -72,8 +68,8 @@ export const getSimpleTravelTime = cache_function(
 		try {
 			return Duration.fromObject({ seconds: parseInt(res.routes[0].duration) });
 		} catch (e) {
-			console.error('Error parsing google routes api return value');
-			console.log(JSON.stringify(res, null, 2));
+			saveLog('Error parsing google routes api return value');
+			saveLog(JSON.stringify(res, null, 2));
 			return Duration.fromObject({ seconds: 0 });
 		}
 	},
@@ -116,7 +112,7 @@ export const getTravelTime = cache_function(
 			travelTime: travelTime.rescale().toHuman(),
 			error: error()
 		});
-		console.log(`${from} -> ${to}`, JSON.stringify(logs, null, 2));
+		saveLog(`${from} -> ${to}`, JSON.stringify(logs, null, 2));
 
 		return travelTime;
 	},

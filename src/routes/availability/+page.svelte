@@ -58,11 +58,16 @@
 
 		console.log('Fetching: ', `/api/availability?${params.toString()}`);
 
-		appointments = await fetch(`/api/availability?${params.toString()}`)
-			.then((resp) => resp.json())
+		await fetch(`/api/availability?${params.toString()}`)
+			.then((resp) => {
+				if (!resp.ok) {
+					throw new Error(`Status: ${resp.status}`);
+				}
+				return resp.json();
+			})
 			.then((json) => {
 				console.log('json: ', json);
-				return json.availability.map((avail: { [key: string]: string }) => {
+				appointments = json.availability.map((avail: { [key: string]: string }) => {
 					return {
 						time_range: TimeRange.fromJSON(JSON.stringify(avail.time_range)),
 						//state: avail.state,
@@ -70,9 +75,19 @@
 						available: avail.available
 					};
 				});
+				cached_appointments[params.toString()] = appointments;
+			})
+			.catch(async (error) => {
+				const wait = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
+				if (error instanceof Error && error.message === 'Status: 500') {
+					await wait(100);
+				} else {
+					console.error('Error fetching appointments:', error);
+					await wait(5000);
+				}
+				console.log('updating again');
+				await updateAppointments();
 			});
-
-		cached_appointments[params.toString()] = appointments;
 	}
 
 	async function detectLocation() {
