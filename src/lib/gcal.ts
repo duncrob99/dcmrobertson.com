@@ -221,44 +221,74 @@ function calculateAvailability(
 	console.log('Done filtering & rounding');
 
 	console.log('Num busy events:', busy_events.length);
-	let availability: Interval = new Interval(rangeStart, rangeEnd);
-	busy_events.forEach((ev) => {
-		availability = availability.difference(ev.start, ev.end);
-		let start = ev.start;
-		while (availability.intersection(start, ev.end).intervals().length > 0) {
-			availability = availability.difference(start, ev.end);
-			start = start.plus({ minute: 1 });
+	const mergeIntervals = (items: Event[]): { start: DateTime; end: DateTime }[] => {
+		const sorted = items
+			.map((event) => ({ start: event.start, end: event.end }))
+			.sort((a, b) => a.start.toMillis() - b.start.toMillis());
+		const merged: { start: DateTime; end: DateTime }[] = [];
+		for (const interval of sorted) {
+			const last = merged[merged.length - 1];
+			if (!last || interval.start.toMillis() > last.end.toMillis()) {
+				merged.push(interval);
+			} else if (interval.end.toMillis() > last.end.toMillis()) {
+				last.end = interval.end;
+			}
 		}
-	});
+		return merged;
+	};
+
+	const busyIntervals = mergeIntervals(busy_events);
+	console.log('Merged busy events:', busyIntervals.length);
+
+	const availabilityIntervals: { start: DateTime; end: DateTime }[] = [];
+	let cursor = rangeStart;
+	for (const busy of busyIntervals) {
+		if (busy.end.toMillis() <= cursor.toMillis()) {
+			continue;
+		}
+		if (busy.start.toMillis() > cursor.toMillis()) {
+			availabilityIntervals.push({ start: cursor, end: busy.start });
+		}
+		if (busy.end.toMillis() > cursor.toMillis()) {
+			cursor = busy.end;
+		}
+		if (cursor.toMillis() >= rangeEnd.toMillis()) {
+			break;
+		}
+	}
+	if (cursor.toMillis() < rangeEnd.toMillis()) {
+		availabilityIntervals.push({ start: cursor, end: rangeEnd });
+	}
 	console.log('Done busy events loop');
 
-	// Split intervals on midnight
-	for (let t = rangeStart; t <= rangeEnd; t = t.plus({ days: 1 })) {
-		availability = availability.difference(t);
-	}
-	console.log('Done midnight split');
+	const splitByMidnight = (items: { start: DateTime; end: DateTime }[]) => {
+		const split: { start: DateTime; end: DateTime }[] = [];
+		for (const interval of items) {
+			let start = interval.start;
+			const end = interval.end;
+			while (start.toMillis() < end.toMillis()) {
+				const nextMidnight = start.startOf('day').plus({ days: 1 });
+				const sliceEnd = nextMidnight.toMillis() < end.toMillis() ? nextMidnight : end;
+				split.push({ start, end: sliceEnd });
+				start = sliceEnd;
+			}
+		}
+		return split;
+	};
 
 	const availability_intervals: { start: DateTime; end: DateTime; state: AppointmentState }[] =
-		availability.intervals().map((int: Interval) => {
-			return {
-				start: int.start.value(),
-				end: int.end.value(),
-				state: AppointmentState.Available
-			};
-		});
+		splitByMidnight(availabilityIntervals).map((int) => ({
+			start: int.start,
+			end: int.end,
+			state: AppointmentState.Available
+		}));
 	console.log('calculated availability intervals');
 
-	let booked = new Interval();
-	tutoring_events.forEach((ev) => {
-		booked = booked.union(ev.start, ev.end);
-	});
-	booked = booked.intervals().map((int: Interval) => {
-		return {
-			start: int.start.value(),
-			end: int.end.value(),
-			state: AppointmentState.Booked
-		};
-	});
+	const booked = mergeIntervals(tutoring_events).map((int) => ({
+		start: int.start,
+		end: int.end,
+		state: AppointmentState.Booked
+	}));
 	console.log('calculated booked intervals');
 
 	const appointments: Appointment[] = availability_intervals.concat(booked).map((int) => {
@@ -285,65 +315,78 @@ function calculateAvailability(
 		return { start, end };
 	}
 
-	let combinedIntervals: Interval<number> = new Interval(0, 24 * 7);
-	appointments.forEach((app) => {
-		const { start, end } = toHours(app);
-		combinedIntervals = combinedIntervals.difference(start).difference(end);
+	const boundarySet = new Set<number>([0, 24 * 7]);
+	const appointmentHours = appointments.map((app) => ({
+		state: app.state,
+		...toHours(app)
+	}));
+	appointmentHours.forEach(({ start, end }) => {
+		boundarySet.add(start);
+		boundarySet.add(end);
 	});
+
+	const boundaries = Array.from(boundarySet).sort((a, b) => a - b);
+	const indexByBoundary = new Map(boundaries.map((value, index) => [value, index]));
+	const bookedDiff = new Array(boundaries.length).fill(0);
+	const availableDiff = new Array(boundaries.length).fill(0);
+
+	for (const app of appointmentHours) {
+		const startIndex = indexByBoundary.get(app.start);
+		const endIndex = indexByBoundary.get(app.end);
+		if (startIndex === undefined || endIndex === undefined) {
+			continue;
+		}
+		if (app.state === AppointmentState.Booked) {
+			bookedDiff[startIndex] += 1;
+			bookedDiff[endIndex] -= 1;
+		} else {
+			availableDiff[startIndex] += 1;
+			availableDiff[endIndex] -= 1;
+		}
+	}
 
 	console.log('calculated combined intervals');
 
-	const combinedAvailability = combinedIntervals.intervals().map((int: Interval<number>) => {
-		const booked = appointments.filter(
-			(app) =>
-				app.state === AppointmentState.Booked &&
-				new Interval(int.start, int.end).subset(toHours(app).start, toHours(app).end)
-		);
-		const available = appointments.filter(
-			(app) =>
-				app.state === AppointmentState.Available &&
-				new Interval(int.start, int.end).subset(toHours(app).start, toHours(app).end)
-		);
-
-		const weekday = Math.floor(int.start.value() / 24);
-		const start = Time.fromQuarterHours((int.start.value() - weekday * 24) * 4);
-		const end = Time.fromQuarterHours((int.end.value() - weekday * 24) * 4);
-
-		return {
+	const combinedAvailability: Availability[] = [];
+	let bookedCount = 0;
+	let availableCount = 0;
+	for (let i = 0; i < boundaries.length - 1; i++) {
+		bookedCount += bookedDiff[i];
+		availableCount += availableDiff[i];
+		const startValue = boundaries[i];
+		const endValue = boundaries[i + 1];
+		if (startValue === endValue) continue;
+		const weekday = Math.floor(startValue / 24);
+		const start = Time.fromQuarterHours((startValue - weekday * 24) * 4);
+		const end = Time.fromQuarterHours((endValue - weekday * 24) * 4);
+		combinedAvailability.push({
 			time_range: new TimeRange(weekday, start, end),
-			booked: booked.length,
-			available: available.length
-		};
-	});
+			booked: bookedCount,
+			available: availableCount
+		});
+	}
 
 	console.log('calculated combined availability');
 
-	//combinedAvailability.sort((a, b) => a.time_range.start.asQuarterHours() - b.time_range.start.asQuarterHours());
-
-	// Join adjacent times with same availability
+	const mergedAvailability: Availability[] = [];
 	const state = (av: Availability): string | number => (av.booked > 0 ? 'booked' : av.available);
-	let i = 0;
-	let loops = 0;
-	while (i < combinedAvailability.length - 1 && loops < 200) {
-		const av1 = combinedAvailability[i];
-		const av2 = combinedAvailability[i + 1];
-		const same_availability =
-			av1.time_range.weekday === av2.time_range.weekday &&
-			av1.time_range.end.toString() == av2.time_range.start.toString() &&
-			state(av1) === state(av2);
-
-		if (same_availability) {
-			combinedAvailability[i].time_range.end = av2.time_range.end;
-			combinedAvailability.splice(i + 1, 1);
-		} else {
-			i++;
+	for (const current of combinedAvailability) {
+		const prev = mergedAvailability[mergedAvailability.length - 1];
+		if (
+			prev &&
+			prev.time_range.weekday === current.time_range.weekday &&
+			prev.time_range.end.toString() === current.time_range.start.toString() &&
+			state(prev) === state(current)
+		) {
+			prev.time_range.end = current.time_range.end;
+			continue;
 		}
-		loops++;
+		mergedAvailability.push(current);
 	}
 
 	console.log('joined adjacent times with same availability');
 
-	return combinedAvailability;
+	return mergedAvailability;
 }
 
 export const getAvailability = cache_function(
