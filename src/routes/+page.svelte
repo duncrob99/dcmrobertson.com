@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import ReviewsCarousel from '$lib/components/ReviewsCarousel.svelte';
+	import ReviewsCarouselItem from '$lib/components/ReviewsCarouselItem.svelte';
 
 	let symbols: HTMLElement;
 
@@ -261,6 +263,25 @@
 		<h1>Duncan Robertson Tutoring</h1>
 
 		<h2>Guiding students to a deeper understanding and appreciation of maths and science</h2>
+
+		<ReviewsCarousel>
+			<ReviewsCarouselItem
+				quote="Duncan helped me turn Physics from my worst class into my best in a matter of a couple of months, and was great to talk to all the while. I couldn't recommend him enough!"
+				author="Liam"
+			/>
+			<ReviewsCarouselItem
+				quote="Duncan is an excellent tutor. Through our lessons he is always patient and gives me the opportunity to work out the answer through hints and teaching rather than just directly giving me the answer. I highly recommend Duncan as a VCE physics tutor."
+				author="Alessandro"
+			/>
+			<!-- <ReviewsCarouselItem
+				quote="Weekly tutoring kept me on track and boosted my exam results by two grades."
+				author="Priya, GCSE"
+			/> -->
+			<ReviewsCarouselItem
+				quote="Duncan tutors my son Michael in maths and we think he is a wonderful teacher. Duncan is very calm and gently explains the maths concepts. Michael really enjoys the support, encouragement and relaxed but focused learning environment that Duncan offers. I highly recommend Duncan - he has a strong knowledge of the curriculum and he has greatly built Michael's maths confidence."
+				author="Natalie"
+			/>
+		</ReviewsCarousel>
 	</div>
 
 	<div class="portrait-container">
@@ -290,7 +311,11 @@
 		display: grid;
 		background: var(--background);
 		grid-template-columns: 1fr 2fr;
-		grid-template-areas: 'symbols heading';
+		grid-template-rows: 1fr min-content 1fr;
+		grid-template-areas:
+			'. .'
+			'symbols heading'
+			'. .';
 		height: 100%;
 		$vertical-breakpoint: 800px;
 
@@ -320,6 +345,13 @@
 			justify-content: center;
 			align-items: center;
 			padding: 0 1rem;
+			gap: 1.5rem;
+			background: rgba(255, 255, 255, 0.7);
+			mask-image: linear-gradient(to bottom, transparent 0, black 10% 90%, transparent 100%),
+				linear-gradient(to right, transparent 0, black 10% 90%, transparent 100%);
+			mask-composite: intersect;
+			border-radius: 1rem;
+			z-index: 1;
 
 			h1 {
 				font-family: var(--display-font);
