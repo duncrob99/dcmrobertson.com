@@ -285,7 +285,7 @@
 	</div>
 
 	<div class="portrait-container">
-		<img class="portrait" src="/portrait.jpg" alt="portrait" />
+		<img class="portrait" src="/portrait.png" alt="portrait" />
 	</div>
 
 	<div bind:this={symbols} class="symbols">
@@ -314,7 +314,7 @@
 		grid-template-rows: 1fr min-content 1fr;
 		grid-template-areas:
 			'. .'
-			'symbols heading'
+			'portrait heading'
 			'. .';
 		height: 100%;
 		$vertical-breakpoint: 800px;
@@ -333,9 +333,9 @@
 		*/
 
 		@media (max-width: $vertical-breakpoint) {
-			grid-template-columns: 1fr;
+			grid-template-columns: 100%;
 			grid-template-rows: min-content min-content 1fr;
-			grid-template-areas: 'heading' 'portrait' 'symbols';
+			grid-template-areas: 'portrait' 'heading' 'symbols';
 		}
 
 		.headings {
@@ -367,6 +367,7 @@
 
 		.symbols {
 			grid-area: symbols;
+			position: fixed;
 
 			img {
 				--origin-x: 0;
@@ -424,7 +425,7 @@
 		}
 
 		.portrait-container {
-			grid-area: symbols;
+			grid-area: portrait;
 			z-index: 1;
 			display: flex;
 			flex-direction: column;
@@ -432,9 +433,15 @@
 			align-items: center;
 
 			.portrait {
-				object-fit: contain;
 				border-radius: 50%;
-				max-width: 40vw;
+				aspect-ratio: 32/40;
+				width: min(30vw, 30em);
+				object-fit: cover;
+				object-position: top;
+
+				@media (max-width: $vertical-breakpoint) {
+					width: min(100%, min(30em, calc(30vh * 32 / 40)));
+				}
 			}
 		}
 	}
