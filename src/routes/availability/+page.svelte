@@ -7,7 +7,7 @@
 
 	let calendarEl: HTMLDivElement;
 
-	let timeRangeParams = '0 1';
+	let timeRangeParams = '0 10';
 	$: num_weeks = parseInt(timeRangeParams.split(' ')[1]);
 	let appointments: Availability[] = [];
 
