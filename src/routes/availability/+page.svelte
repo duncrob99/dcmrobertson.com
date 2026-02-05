@@ -4,10 +4,16 @@
 	import ScrollabilityIndicator from '$lib/components/ScrollabilityIndicator.svelte';
 	import { onMount, tick } from 'svelte';
 	import { fade } from 'svelte/transition';
+	import { page } from '$app/stores';
+	import { browser } from '$app/environment';
+	import { replaceState } from '$app/navigation';
 
 	let calendarEl: HTMLDivElement;
 
-	let timeRangeParams = '0 10';
+	$: console.log('state: ', $page.state);
+	const viewParam = $page.state.view || $page.url.searchParams.get('view') || '10-week';
+	let timeRangeParams =
+		viewParam === 'this-week' ? '0 1' : viewParam === 'next-week' ? '1 1' : '0 10';
 	$: num_weeks = parseInt(timeRangeParams.split(' ')[1]);
 	let appointments: Availability[] = [];
 
@@ -20,8 +26,19 @@
 	] = appointments;
 
 	let customInput: HTMLInputElement | undefined;
-	let selectLocation = '';
-	let customLocation = '';
+	let presetLocations = [
+		{ address: '647J+5H Doncaster, Victoria', label: 'Doncaster Library' },
+		{ address: '53PP+H6 Balwyn, Victoria', label: 'Balwyn Library' },
+		{ address: '62C9+XJ Fairfield, Victoria', label: 'Fairfield Library' }
+	];
+	let locationParam = $page.state.location || $page.url.searchParams.get('location') || undefined;
+
+	let selectLocation =
+		presetLocations.find((location) => location.address == locationParam)?.address ||
+		(locationParam ? 'Custom' : '');
+	let customLocation = presetLocations.find((location) => location.address === locationParam)
+		? ''
+		: locationParam;
 	$: location = selectLocation === 'Custom' ? customLocation : selectLocation;
 	$: if (selectLocation === 'Custom') {
 		(async () => {
@@ -29,6 +46,23 @@
 			customInput?.focus();
 		})();
 	}
+
+	$: view =
+		timeRangeParams === '0 1' ? 'this-week' : timeRangeParams === '1 1' ? 'next-week' : undefined;
+	$: params = new URLSearchParams({
+		...(view ? { view } : {}),
+		...(location ? { location } : {})
+	});
+	$: console.log('params', params.toString());
+	$: (async () => {
+		if (browser) {
+			await tick();
+			replaceState(
+				`/availability${params.toString() ? '?' : ''}${params.toString()}`,
+				Object.fromEntries(params.entries())
+			);
+		}
+	})();
 
 	onMount(async () => {
 		updateAppointments();
@@ -47,7 +81,6 @@
 			'num-weeks': timeRangeParams.split(' ')[1],
 			location
 		});
-		console.log('params: ', params.toString());
 		const cached = cached_appointments[params.toString()];
 		if (cached) {
 			appointments = cached_appointments[params.toString()];
@@ -131,9 +164,9 @@
 		</select>
 		<select id="location-select" bind:value={selectLocation} on:change={updateAppointments}>
 			<option value=""> Select a location </option>
-			<option value="647J+5H Doncaster, Victoria"> Doncaster Library </option>
-			<option value="53PP+H6 Balwyn, Victoria"> Balwyn Library </option>
-			<option value="62C9+XJ Fairfield, Victoria"> Fairfield Library </option>
+			{#each presetLocations as location}
+				<option value={location.address}>{location.label}</option>
+			{/each}
 			<option value="Custom"> Custom (e.g. your house) </option>
 		</select>
 	</div>

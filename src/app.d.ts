@@ -19,6 +19,11 @@ declare global {
 				FUNCTION_CACHE: KVNamespace;
 			};
 		}
+
+		interface PageState {
+			view?: string;
+			location?: string;
+		}
 	}
 }
 
